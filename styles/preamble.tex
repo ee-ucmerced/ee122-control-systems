@@ -1,0 +1,101 @@
+% The following packages can be found on http:\\www.ctan.org
+% \usepackage{graphics} % for pdf, bitmapped graphics files
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+\usepackage{amsmath} % assumes amsmath package installed
+\usepackage{amssymb,mathtools}  % assumes amsmath package installed
+\usepackage{xcolor}
+\usepackage{pgfplots,subcaption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fancyhdr}
+% \usepackage{geometry}
+\usepackage{siunitx}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{environ}
+\usepackage{pifont}
+% -------- listings (Python) ----------
+\lstdefinestyle{py}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!60!black},
+  showstringspaces=false,
+  columns=fullflexible,
+  frame=single,
+  framerule=0.3pt,
+  numbers=left,
+  numberstyle=\tiny,
+  xleftmargin=1em,
+  tabsize=2,
+  breaklines=true,
+}
+
+\usepackage[american]{circuitikz}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,angles,quotes}
+\tikzset{
+  >={Latex[length=2.2mm]},
+  block/.style={draw, thick, rectangle, minimum height=10mm, minimum width=24mm, align=center},
+  gain/.style={block, minimum width=14mm},
+  sum/.style={draw, thick, circle, inner sep=0pt, minimum size=6mm},
+  conn/.style={-Latex, thick},
+}
+\usepackage{caption}    
+\usepackage{lscape}
+\usepackage{soul}
+\usepackage{physics}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    pdftitle={week1_notes},
+    pdfpagemode=FullScreen,
+}
+%\usepackage{float} 
+
+%\usepackage[demo]{graphicx}
+\pgfplotsset{compat=1.18}
+% \usepgfplotslibrary{fillbetween}
+
+\newsavebox{\measurebox}
+
+\let\proof\relax\let\endproof\relax
+
+
+\def\abs#1{\left\lvert#1\right\rvert}
+\let\proof\relax
+\let\endproof\relax
+\usepackage{amsthm}
+\usepackage{accents}
+\usepackage{relsize}
+\newcommand{\ubar}[1]{\underaccent{\bar}{#1}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{statement}{Statement}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+ 
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+\theoremstyle{remark}
+\newtheorem*{claim}{Claim}
+\setlength{\parindent}{0cm}
+\newenvironment{nalign}{
+    \begin{equation}
+    \begin{aligned}
+}{
+    \end{aligned}
+    \end{equation}
+    \ignorespacesafterend
+} 
