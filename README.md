@@ -8,6 +8,21 @@ This repository contains all course materials for EE122: Introduction to Control
 - `macros.tex`: Macro file for course meta information (semester, year, instructor, etc.).
 - `solutions/`: Submodule for solutions (only accessible via CatCourses for UC Merced students).
 
+## Getting Started
+
+To clone this repository with the solutions submodule (requires access to the private solutions repository):
+
+```bash
+git clone --recurse-submodules https://github.com/ee-ucmerced/ee122-control-systems.git
+```
+
+If you've already cloned the repository, initialize and update the submodule:
+
+```bash
+git submodule init
+git submodule update
+```
+
 ## License
 This repository is for educational use in EE122 at UC Merced.
 
