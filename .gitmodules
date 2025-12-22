@@ -1,0 +1,3 @@
+[submodule "solutions"]
+path = solutions
+url = https://github.com/ee-ucmerced/s-e122-control-systems.git
