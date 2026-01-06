@@ -1,3 +1,6 @@
 [submodule "solutions"]
 path = solutions
 url = https://github.com/ee-ucmerced/s-e122-control-systems.git
+[submodule "labs/labs-ee122-control-systems"]
+	path = labs/labs-ee122-control-systems
+	url = https://github.com/ee-ucmerced/labs-ee122-control-systems

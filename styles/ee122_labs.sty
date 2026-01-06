@@ -1,0 +1,33 @@
+% Package for EE122 laboratory reports
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+\ProvidesPackage{ee122_labs}[2026/01/05 - v1.0 Package for EE122 laboratory reports]
+
+% ----- Basic packages -----
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{float}
+\RequirePackage[version=3]{mhchem} % Package for equation typesetting
+\RequirePackage{siunitx} % Provides the \SI{}{} and \si{} command for typesetting SI units
+\RequirePackage{graphicx} % Required for the inclusion of images
+\RequirePackage{amsmath} % Required for some math elements 
+\RequirePackage{setspace}
+\renewcommand{\baselinestretch}{1} 
+
+% ----- Formatting -----
+\setlength\parindent{0pt} % Removes all indentation from paragraphs
+\renewcommand{\labelenumi}{\alph{enumi}.} % Make numbering in the enumerate environment by letter rather than number
+
+% ----- Font (optional, can be commented out) -----
+\RequirePackage{times} % Times New Roman font
+% public config (overridable in macros.tex)
+\providecommand{\course}{EE 122}
+\providecommand{\coursetitle}{Introduction to Control Systems}
+\providecommand{\instructor}{}
+\providecommand{\releasedate}{}
+\providecommand{\duedate}{}
+\providecommand{\student}{}     % so \renewcommand in macros.tex is safe
+\providecommand{\semester}{}    % "
+\providecommand{\psetnum}{1}    % default
+\newcommand{\coursefull}{\course: \coursetitle}
+
+
+\endinput
