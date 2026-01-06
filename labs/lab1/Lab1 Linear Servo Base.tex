@@ -1,0 +1,585 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_labs}
+\input{macros.tex}
+\input{preamble.tex}
+
+%----------------------------------------------------------------------------------------
+%	DOCUMENT INFORMATION
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{center}
+\Large{
+\textbf{School of Engineering} \\
+\textbf{University of California, Merced} \\
+\noindent\rule{6.5in}{1.5pt} \\
+\textbf{ME 141 - Control Engineering} \\
+\textbf{ } \\
+ \vspace{150mm}
+\textbf{\large{Experiment No. One}} \\
+\textbf{ } \\
+\textbf{Linear Servo Base}
+}
+\end{center}
+
+\pagebreak
+
+% If you wish to include an abstract, uncomment the lines below
+% \begin{abstract}
+% Abstract text
+% \end{abstract}
+
+%----------------------------------------------------------------------------------------
+%	SECTION 1
+%----------------------------------------------------------------------------------------
+
+\section*{Objectives}
+
+\begin{itemize}
+    \item[1.] Learn how to derive a transfer function to describe the linear motions of a cart.
+    \item[2.] Gain hands-on experience with experiments and Quanser data acquisition systems.
+    \item[3.] Learn how to use Matlab for post-processing experimental data.
+\end{itemize} 
+ 
+%----------------------------------------------------------------------------------------
+%	SECTION 2
+%----------------------------------------------------------------------------------------
+
+\section*{Background}
+
+%----------------------------------------------------------------------------------------
+%	SUBSECTION 1
+%----------------------------------------------------------------------------------------
+
+\subsection*{Modeling the System}
+
+The equations of motion for the cart are given by
+
+\begin{center}
+    \begin{equation} \label{eq:EoM}
+    M\dot{v}_c(t)+B_{eq}v_c(t)=A_m v_m(t)
+    \end{equation}
+\end{center}
+
+where $M$ is the mass of the cart, $v_c$ is the linear velocity of the cart, $v_m$ is the motor input voltage, and $B_{eq}$ is the equivalent damping coefficient. The equation of motion and the variables $B_{eq}$ and $A_m$ are derived from in the Appendix. By taking the Laplace transform, we can obtain the following first-order transfer function for the linear velocity of the IP02 cart with respect to the input motor voltage:
+
+\begin{center}
+    \begin{equation} \label{eq:speed_transfer_function}
+    \frac{V_{cart}(s)}{V_{motor}(s)}=\frac{K}{\tau s+1}
+    \end{equation}
+\end{center}
+
+where $V_{cart}$ is the Laplace transform for the cart's speed [$v_c(t)$], $V_{motor}$ is the Laplace transform for the motor input voltage [$v_m(t)$], $K$ is the steady-state gain, $\tau$ is the time constant and $s$ is the Laplace operator. 
+
+%----------------------------------------------------------------------------------------
+%	SUBSECTION 1
+%----------------------------------------------------------------------------------------
+
+\subsection*{(b) Position Control Response}
+
+For a position control feedback system, we can design the system as shown below, $Y(s)$ being the Laplace transform of our measured output, namely the position of the cart.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.6\textwidth]{lab1/Position Control Feedback System2.png}
+        \caption{Unity Feedback System}
+        \label{fig:1}
+    \end{center}
+\end{figure}
+
+Then $R(s)$, $E(s)$, and $U(s)$ be the Laplace transforms of the reference signal $r(t)$, error $e(t) = r(t)-y(t)$, and the input to the plant $u(t)$.
+
+The output of this system can be written as
+\begin{center}
+    \begin{equation}
+        Y(s)=C(s)P(s)(R(s)-Y(s)) \;
+    \end{equation}
+\end{center}
+
+We can rewrite this as a closed-loop transfer function by solving for $Y(s)$
+
+\begin{center}
+    \begin{equation} \label{eq:cl_transferfunction}
+        \frac{Y(s)}{R(s)}=\frac{C(s)P(s)}{1+C(s)P(s)}
+    \end{equation}
+\end{center}
+
+To get the voltage-to-position transfer function $P(s) = Y(s)/U(s)$, we introduced a integrator $\frac{1}{s}$ in series with the voltage-to-speed transfer function from equation \ref{eq:speed_transfer_function} (effectively integrating the speed to get position). The result is
+
+\begin{center}
+    \begin{equation} \label{eq:plant}
+        P(s)=\frac{Y(s)}{U(s)} = \frac{K}{s(\tau s+1)}
+    \end{equation}
+\end{center}
+
+We will use proportional-velocity (PV) control law for our control input $u(t)$. This has the form:
+
+\begin{center}
+    \begin{equation}
+        u(t) = k_p\left[r(t) - y(t)\right] - k_d \dot{y}(t)
+    \end{equation}
+\end{center}
+
+Taking the Laplace transform allows use to represent the input signal $U(s)$ in terms of the reference $R(s)$ and output $Y(s)$:
+
+\begin{center}
+    \begin{equation} \label{eq:control_input}
+        U(s) =  k_p\left[R(s) - Y(s)\right] - k_d s Y(s)
+    \end{equation}
+\end{center}
+
+
+where $k_p$ is the proportional gain, $k_d$ is the derivative gain, $r = x_d(t)$ is the set-point (desired) cart position, $y=x_a(t)$ is the measured cart position, and $u=v_m(t)$ is the control input or IP02 motor input voltage. Figure \ref{fig:PVcontrol_blockdiagram} shows the block diagram representation for the PV control scheme. Note that the proportional term is based on the error ($e=r-y$) while the derivative term is based only on the derivative of the output (position, $y$). Note also that if the the reference cart position $r$ is kept constant, then the derivative of the error is equal to the derivative of the output.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=1\textwidth]{lab1/PVcontrol_blockdiagram.png}
+        \caption{Block diagram of PV control}
+        \label{fig:PVcontrol_blockdiagram}
+    \end{center}
+\end{figure}
+
+We can use equations \ref{eq:plant} and \ref{eq:control_input} to solve for the closed-loop transfer function, which gives:
+
+\begin{center}
+    \begin{equation} \label{eq:PV_cl_transferfunction}
+        \frac{Y(s)}{R(s)} = \frac{Kk_p}{\tau s^2 + (1+Kk_d)s + Kk_p}
+    \end{equation}
+\end{center}
+
+Since the plant is a second-order system, introducing the integrator to the feedback system can help us to rewrite the closed-loop transfer function in a general form as:
+
+\begin{center}
+    \begin{equation}
+        \frac{Y(s)}{R(s)}=\frac{\omega_n^2}{s^2+2\zeta\omega_ns+\omega_n^2}
+    \end{equation}
+\end{center}
+
+where $\omega_n$ is the natural frequency and $\zeta$ is the damping ratio. We can calculate the values of $\omega_n$ and $\zeta$ necessary for us to achieve our desired time-domain specifications. The desired time-domain specifications for controlling the position will be:
+
+\begin{itemize}
+    \item peak time, $t_p=0.15s$
+    \item percent overshoot, $PO=10\%$
+    \item steady-state error, $e_{ss}=0$
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{lab1/Standard second-order step response.jpg}
+    \caption{Standard Second-Order Step Response}
+    \label{fig:2nd_order_step_response}
+\end{figure}
+Percent overshoot ($PO$ in figure \ref{fig:2nd_order_step_response}) is defined as:
+\begin{center}
+    \begin{equation}
+        PO= \frac{100 (y_{max} - R_0)}{R_0}
+    \end{equation}
+\end{center}
+
+where $y_{max}$ is maximum output value and $R_0$ is the magnitude of the reference step input. Percent overshoot is dependent on the damping ratio, $\zeta$, and can be expressed as:
+
+\begin{center}
+    \begin{equation} \label{eq:PO}
+        PO=100\exp{\left({\frac{{-\pi\zeta}}{\sqrt{1-\zeta^2}}}\right)}
+    \end{equation}
+\end{center}
+
+Another quantity we want to control is the peak time, $t_p$, which is defined as:
+
+\begin{center}
+    \begin{equation} \label{eq:tp}
+        t_p = t_{max} - t_0
+    \end{equation}
+\end{center}
+
+where $t_{max}$ is the time at which the maximum output is reached and $t_0$ is the initial time at which the step input is applied. While the percent overshoot only depends on the damping ratio; the peak time ($t_p$ in Figure 2) needs to include both the damping ratio and the natural frequency:
+
+\begin{center}
+    \begin{equation}
+        t_p=\frac{\pi}{\omega_n\sqrt{1-\zeta^2} }
+    \end{equation}
+\end{center}
+
+Generally speaking, the damping ratio affects the shape of the response while the natural frequency affects the speed of the response.
+
+The error of the system is given by the difference between the reference (desired cart position) and the output (actual measured cart position):
+
+\begin{center}
+    \begin{equation}
+        e(t) = r(t) - y(t)
+    \end{equation}
+\end{center}
+
+Taking the Laplace transform gives:
+
+\begin{center}
+    \begin{equation} \label{eq:error_transfer_function}
+        E(s) = R(s) - Y(s)
+    \end{equation}
+\end{center}
+
+The steady-state error, $e_{ss}$, is the error as time goes to infinity. Using the Final-Value Theorem, this is given by:
+
+\begin{center}
+    \begin{equation}
+        e_{ss} = \lim_{t\to\infty} e(t) = \lim_{s\to 0} sE(s)
+    \end{equation}
+\end{center}
+
+
+
+
+
+%----------------------------------------------------------------------------------------
+%	SUBSECTION 3
+%----------------------------------------------------------------------------------------
+
+%\subsection*{(c) Speed Control Response}
+%
+%Below are the new design requirements to be met for designing the lead compensator to reduce steady-state error, and increase the bandwidth and phase margin:
+%
+%\begin{itemize}
+%    \item $\omega_c=80$ rad/s
+%    \item $\phi_m=85^{\circ}$
+%    \item $t_p=0.15s$
+%%    \item $PO=10\%$
+%    \item $PO\leq 5\%$
+%    \item $e_{ss}=0$
+%\end{itemize}
+
+
+
+%----------------------------------------------------------------------------------------
+%	SECTION 3
+%----------------------------------------------------------------------------------------
+
+\section*{Procedure}
+
+For the performed experiments in the instructions below, we will need to use Matlab 2019b (other versions will not connect to the QUARC interface!). 
+
+\subsection*{(a) Simulation}
+
+After opening Matlab, change the workspace directory to the folder on the Desktop labeled "ME141 Lab \#1" $>$ "Position Control". Open the Simulink file named $s\_ip02\_position$
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{lab1/IMG_s_ip02_PositionSimulation.jpg}
+    \caption{Simulink Block Diagram for Position Control Simulation}
+    \label{fig:my_label}
+\end{figure}
+
+ \begin{itemize}
+ \item[1.] Run the $setup\_ip02\_position$ script
+ \item[2.] To generate a step reference, verify the $Signal$ $Generator$ is set to the following:
+ \begin{itemize}
+     \item Signal Type = $square$
+     \item Amplitude = 1
+     \item Frequency = 0.66 Hz
+ \end{itemize}
+ \item[3.] In the Simulink diagram, set the $Amplitude$ $(m)$ gain block to $0.01$ to generate a step of $10$ $mm$
+ \item[4.] Inside the $PV$ $Control$ subsystem, set the $Manual$ $Switch$ to the upward position so the $Derivative$ $block$ is used
+ \item[5.] Open the cart position scope, $x_c$ $(m)$, and the motor input voltage scope, $V_m$ $(V)$
+ \item[6.] Start the simulation and observe the response with the parameters assigned; take note of the colored lines in the $x_c$ $(m)$ graph
+ \begin{itemize}
+     \item Yellow Trace - set-point position
+     \item Purple Trace - simulated position
+ \end{itemize}
+ \item[7.] Change the values for $k_p$ and $k_v$ and observe how the changes affect the response. Run the simulation with the $k_p$ and $k_v$ values that have the best response within the desired time-domain specifications.
+ \item[8.] Export the data from the Matlab workspace variables to calculate the steady-state error, percent overshoot, and peak time:
+ \begin{itemize}
+     \item $x\_c$ $(m)$: data\_pos
+     \begin{itemize}
+         \item data\_pos(:,1) = time
+         \item data\_pos(:,2) = simulated position
+         \item data\_pos(:,3) = set-point position
+     \end{itemize}
+     \item $data\_vm$ $(V)$: data\_vm
+     \begin{itemize}
+         \item data\_vm(:,1) = time
+         \item data\_vm(:,2) = simulated input voltage
+     \end{itemize}
+ \end{itemize}
+ \end{itemize}
+
+\subsection*{(b) Position Control}
+
+Open the Simulink file named $q\_ip02\_position$ to view the block diagram as seen below: \\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{lab1/IMG_q_ip02_position.jpg}
+    \caption{Simulink Block Diagram for Position Control}
+    \label{fig:2}
+\end{figure}
+
+Closed-Loop Response with the PV Controller\\
+
+\begin{itemize}
+\item[1.] Run the $setup\_ip02\_position$ script
+\item[2.] Enter the calculated values for $k_p$ and $k_v$ in the Matlab command line
+
+% pos_k_p = 275.49 V/m
+% pos_k_v = 5.54 V-s/m
+% pos_zeta = 0.591
+% pos_omega_n = 26.0 rad/s
+
+\item[3.] From the Simulink diagram, adjust the $Signal$ $Generator$ to a $square$ step reference
+\begin{itemize}
+    \item Amplitude = 1
+    \item Frequency = 0.66
+\end{itemize}
+\item[4.] Set the $Amplitude$ $(m)$ gain block to $0.01$ to generate a step of $10$ $mm$
+\item[5.] Open the cart position scope ($Meas.(0) and Sim.(1) Resp.$) and the motor input voltage scope ($V_m$ $(V)$) to view the graphical data in real-time
+\item[6.] At the top, open the "$Monitor$ $\&$ $Tune$" drop-down menu and click on "$Build$ $for$ $Monitoring$"
+\begin{itemize}
+    \item Verify that the physical amplifier unit is turned on with the gain set to 1x
+    \item Position the cart so that it is aligned in the center of the railing
+\end{itemize}
+\item[7.] Once the file has compiled, click on $Connect$ then $Start$; click "$Stop$" when you see 3 steps on the graphs
+\begin{itemize}
+    \item Keep clear of the rail the cart travels on until the connection has been stopped
+\end{itemize}
+\item[8.] Export the data from $data\_xc$ and $data\_vm$
+\end{itemize}
+
+% \subsection*{(b) Speed Control}
+% 
+% Change the workspace directory to the folder on the Desktop labeled "ME141 Lab \#1" $>$ "Speed Control" Open the Simulink file named $q\_ip02\_speed_lead$ to view the block diagram as seen below: \\
+% 
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics{lab1/IMG_q_ip02_speed_lead.jpg}
+%     \caption{Simulink Block Diagram for Speed Control}
+%     \label{fig:my_label}
+% \end{figure}
+% 
+% Closed-Loop Response with the PV Controller\\
+% 
+% \begin{itemize}
+% \item[1.] Run the $setup\_ip02\_speed\_lead$ script
+% \item[2.] Enter the calculated values for $K_c$, $a$, and $T$ in the Matlab command line
+% \item[3.] From the Simulink diagram, adjust the $Signal$ $Generator$ to a $square$ step reference
+% \begin{itemize}
+%     \item Amplitude = 1
+%     \item Frequency = 0.5
+% \end{itemize}
+% \item[4.] Set the $Amplitude$ $(m)$ gain block to $0.1$ to generate a step of $200$ $mm$
+% \item[5.] Open the cart position scope ($Meas.(0) and Sim.(1) Resp.$) and the motor input voltage scope ($V_m$ $(V)$) to view the graphical data in real-time
+% \item[6.] At the top, open the "$Monitor$ $\&$ $Tune$" drop-down menu and click on "$Build$ $for$ $Monitoring$"
+% \begin{itemize}
+%     \item Verify that the amplifier is turned on with the gain set to 1x
+%     \item Position the cart so that it is aligned in the center of the railing
+% \end{itemize}
+% \item[7.] Once the file has compiled, click on $Connect$ then $Start$; click "$Stop$" when you see 2 steps on the graphs
+% \begin{itemize}
+%     \item Keep clear of the rail the cart travels on until the connection has been stopped
+% \end{itemize}
+% \item[8.] Export the data from $data\_v$ and $data\_vm$
+% \end{itemize}
+
+%----------------------------------------------------------------------------------------
+%	SECTION 4
+%----------------------------------------------------------------------------------------
+
+\section*{Action Items}
+
+In your lab report, provide the following:
+\begin{itemize}
+%\item[1.] Provide a table with the parameter values used for the Position ($k_p$ and $k_v$) and Speed ($K_c$, $a$, and $T$) Controls.
+\item[1.] Take the Laplace transform of equation \ref{eq:EoM} to derive the voltage-to-velocity transfer function in equation \ref{eq:speed_transfer_function}. Express $K$ and $\tau$ in terms of the system variables $A_m$, $B_{eq}$ and $M$.
+\item[2.] Derive the closed-loop transfer function for PV control given by equation \ref{eq:PV_cl_transferfunction}. Express the gains $k_p$ and $k_d$ in terms of $\omega_n$ and $\zeta$.
+\item[3.] Use equations \ref{eq:PO} and \ref{eq:tp}, calculate the minimum damping ratio $\zeta$ and natural frequency $\omega_n$ to meet the design specifications for percent overshoot and peak time. Use these to calculate the required values of $k_p$ and $k_d$ for the position control. 
+\item[4.] Using the error transfer function (equation \ref{eq:error_transfer_function}) and the PV control equation (equation \ref{eq:PV_cl_transferfunction}), find an expression for the transfer function from the reference $R(s)$ to the error $E(s)$. Then use this to find steady-state error of the system, $e_{ss}$, for the step input $R(s) = R_0/s$, where $R_0$ is the desired cart position. Using the Final-Value Theorem, show that $e_{ss}$ is zero for any value of $R_0$. 
+\item[5.] Provide a table with the parameter values used for the position control ($k_p$ and $k_v$).
+\item[6.] Provide graphs of the collected data.
+\item[7.] Calculate the steady-state error, the percent overshoot, and the peak time for the Position and Speed data.
+\item[8.] Briefly discuss any sources of error, and how they affect your final results.
+\end{itemize}
+
+\pagebreak
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+% \bibliographystyle{apalike}
+
+% \bibliography{sample}
+
+
+
+\section*{Relevant files}
+%----------------------------------------------------------------------------------------
+%	Position Control Files
+%----------------------------------------------------------------------------------------
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+$\boldsymbol{File Name}$  & $\boldsymbol{Description}$ \\
+\hline
+setup\_ip02\_position.m & Run this file only to set up the experiment's position control parameters. \\
+ & \\
+\hline
+config\_ip02.m & Returns the configuration-based IP02 model specifications \\
+ & $Rm$, $Jm$, $Kt$, $Eff\_m$, $Km$, $Kg$, $Eff_{g}$, $M$, $r\_mp$,
+and $Beq$ \\
+\hline
+d\_ip02\_position.m & Determines the response specifications $\zeta$ and
+$\omega_n$, and the control gains $k_p$ and $k_v$. \\
+ & \\
+\hline
+d\_model\_param.m & Determines the model parameters $K$, and $\tau$ \\
+ & \\
+\hline
+s\_ip02\_position.mdl & Simulink file that simulates the closed-loop IP02 position control step response \\
+ & \\
+\hline
+q\_ip02\_position.mdl & Simulink file that implements the closed-loop IP02 position controller using QUARC \\
+ & \\
+\hline
+\end{tabular}
+\caption{Matlab files needed for the Position Control Experiment}
+\end{center}
+\end{table}
+
+%----------------------------------------------------------------------------------------
+%	Speed Control Files
+%----------------------------------------------------------------------------------------
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+$\boldsymbol{File Name}$  & $\boldsymbol{Description}$ \\
+\hline
+setup\_ip02\_speed.m & Run this file only to set up the experiment's speed control parameters. \\
+ & \\
+\hline
+config\_ip02.m & Returns the configuration-based IP02 model specifications \\
+ & $Rm$, $Jm$, $Kt$, $Eff_{m}$, $Km$, $Kg$, $Eff_{g}$, $M$, $r\_mp$,
+and $Beq$ \\
+\hline
+d\_ip02\_speed\_lead.m & Determines the control parameters $K_c$ and
+$a$, and $T$. \\
+ & \\
+\hline
+d\_ip02\_speed\_pi.m & Determines the control parameters $K_p$ and $k_i$. \\
+ & \\
+\hline
+d\_model\_param.m & Determines the PI control parameters $K$, and $\tau$ \\
+ & \\
+\hline
+s\_ip02\_speed\_lead.mdl & Simulink file that simulates the closed-loop IP02 lead speed control step response \\
+ & \\
+\hline
+q\_ip02\_speed\_lead.mdl & Simulink file that implements the closed-loop IP02 lead speed controller using QUARC \\
+ & \\
+ \hline
+ q\_ip02\_speed\_pi & Simulink file that implements the closed-loop IP02 PI speed controller \\
+  & \\
+\hline
+\end{tabular}
+\caption{Matlab files needed for the Speed Control Experiment}
+\end{center}
+\end{table}
+
+%----------------------------------------------------------------------------------------
+
+\section*{Appendix}
+
+In this section, we derive the equations of motion for the cart system. By Newton's Second Law, we can represent the force between the cart's DC motor and the motion as follows:
+
+\begin{center}
+    \begin{equation}
+    M\dot{v}_c(t)=F_c(t)-B_cv_c(t)
+    \end{equation}
+\end{center}
+
+where $M$ is the mass of the cart, $v_c$ is the linear velocity of the cart, and $B_c$ is the equivalent viscous damping coefficient as seen at the motor pinion. The driving force generated by the motor on the cart can be expressed as:
+
+\begin{center}
+    \begin{equation}
+    F_c=\frac{\eta_gK_g\tau_m}{r_{mp}}
+    \end{equation}
+\end{center}
+
+where $\eta_g$ is the gearbox efficiency, $K_g$ is the gear ratio, $\tau_m$ is the torque generated by the motor, and $r_{mp}$ is the motor pinion radius.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics{lab1/IP02_DC_Motor_Circuit.jpg}
+        \caption{IP02 DC Motor Armature Circuit}
+        \label{fig:IP02_DC_Motor_Circuit}
+    \end{center}
+\end{figure}
+
+Figure \ref{fig:IP02_DC_Motor_Circuit} displays the circuit for the driving motor where $R_m$ is the motor resistance, $ L_m$ is the inductance, $B_m$ is the motor damping, and $k_m$ is the back-emf constant. Using Kirchoff's Voltage Law, we can write the voltage equation to solve for the inductance (given that $L_m$ represents a much smaller value, it can be neglected):
+
+\begin{center}
+    \begin{equation}
+    V_m(t)-R_mI_m(t)-L_mI_m(t)-k_m\omega_m(t)=0 \xrightarrow{} I_m(t)=\frac{V_m(t)-k_m\omega_m(t)}{R_m}
+    \end{equation}
+\end{center}
+
+By introducing the motor torque constant, $k_t$, we can expand equation (3) by substituting all the components:
+
+\begin{center}
+    \begin{equation}
+    F_c=\frac{\eta_gK_g\eta_mk_t(V_m(t)-k_m\omega_m(t))}{R_mr_{mp}} \hspace{4mm} where \hspace{4mm} \tau_m(t)=\eta_mk_tI_m(t)
+    \end{equation}
+\end{center}
+
+The translation between angular to linear velocity from the motor to the cart is as follows
+
+\begin{center}
+    \begin{equation}
+    F_c=\frac{\eta_gK_g\eta_mk_t(V_m(t)r_{mp}-k_mK_gv_c(t)}{r_{mp}^2R_m} \hspace{4mm} where \hspace{4mm} \omega_m(t)=\frac{K_gv_c(t)}{r_{mp}}
+    \end{equation}
+\end{center}
+
+We can now substitute the force function into equation (2):
+
+\begin{center}
+    \begin{equation}
+    M\dot{v}_c(t)+B_cv_c(t)=\frac{\eta_gK_g\eta_mk_t(V_m(t)r_{mp}-k_mK_gv_c(t))}{r_{mp}^2R_m}
+    \end{equation}
+\end{center}
+
+We can rearrange the equation to combine like-terms:
+
+\begin{center}
+    \begin{equation}
+    M\dot{v}_c(t)+(\frac{k_m\eta_gK_g^2\eta_m k_t}{r_{mp}^2R_m}+B_c)v_c(t)=\frac{\eta_g K_g\eta_m k_t V_m(t)}{r_{mp}R_m}
+    \end{equation}
+\end{center}
+
+This equation can be simplified as follows:
+
+\begin{center}
+    \begin{equation}
+    M\dot{v}_c(t)+B_{eq}v_c(t)=A_mV_m(t)
+    \end{equation}
+\end{center}
+
+where the equivalent damping term is:
+
+\begin{center}
+    \begin{equation}
+    B_{eq}=\frac{\eta_g K_g^2 \eta_m k_t k_m + B_c r_{mp}^2 R_m}{r_{mp}^2 R_m}
+    \end{equation}
+\end{center}
+
+and the actuator gain is:
+
+\begin{center}
+    \begin{equation}
+    A_m=\frac{\eta_g K_g \eta_m k_t}{r_{mp} R_m}
+    \end{equation}
+\end{center}
+
+\end{document}
