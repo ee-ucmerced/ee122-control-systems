@@ -49,7 +49,7 @@ __pycache__/
 *.bcf
 *.run.xml
 *.synctex(busy)
-# --- EE122 pop-quiz generated files (tcolorbox) ---
+# --- EE 122/ME 141 pop-quiz generated files (tcolorbox) ---
 # Recorded solution snippets saved by \savelowerto
 **/popquiz-*.tex
 **/guitar_clean.wav
