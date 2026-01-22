@@ -59,8 +59,6 @@
     linkcolor=blue,
     filecolor=magenta,      
     urlcolor=blue,
-    pdftitle={week1_notes},
-    pdfpagemode=FullScreen,
 }
 %\usepackage{float} 
 
@@ -102,3 +100,250 @@
     \end{equation}
     \ignorespacesafterend
 } 
+%========================
+% EE 122: Block-diagram mini-library (fixed-layout)
+% Provides TWO separate environments:
+%   1) blockdiagram       : WITH summing junction
+%   2) blockdiagramnosum  : WITHOUT summing junction
+%
+% Commands (work in both envs):
+%   \reference{<label>}
+%   \controller[<block text>]{<in-label>}{<out-label>}
+%   \system[<block text>]{<in-label>}{<out-label>}
+%   \feedback{<label>}                % unity feedback
+%   \feedback[<sensor text>]{<label>} % feedback with sensor block
+%
+% Optional spacing keys in both envs:
+%   [xC=..., xP=..., xY=..., xR=..., fbY=...]
+%========================
+
+\usepackage{tikz}
+\usetikzlibrary{calc,positioning}
+\usepackage{xparse}
+
+% --- Namespaced styles (won't collide with your existing styles) ---
+\tikzset{
+  cbd/.style={thick, font=\normalsize},
+  cbd/block/.style={draw, rectangle, minimum height=12mm, minimum width=18mm, align=center},
+  cbd/sum/.style={draw, circle, inner sep=0pt, minimum size=7mm},
+  cbd/arrow/.style={->, >=Latex, thick},
+}
+
+% --- Layout keys (spacing only) ---
+\pgfkeys{
+  /blockdiagram/.is family,
+  /blockdiagram/.cd,
+  xC/.initial=3.2,    % controller x-position
+  xP/.initial=7.2,    % plant x-position
+  xY/.initial=10.2,   % output x-position
+  xR/.initial=-2.2,   % reference start x-position
+  fbY/.initial=-2.2,  % feedback routing depth (negative is below)
+}
+
+% --- Internal state ---
+\newif\ifbdHasSum         % whether the current environment has a summing junction
+\bdHasSumtrue             % default; environments set this appropriately
+\newcommand{\bdCtrlOut}{}  % controller output label used on controller->plant arrow
+\newcommand{\bdRefLabel}{} % reference label stored until controller exists (nosum env)
+
+% --- Helper: robust empty test ---
+\newcommand{\IfEmptyTF}[3]{%
+  \edef\bdTmp{\detokenize{#1}}%
+  \ifx\bdTmp\empty
+    #2%
+  \else
+    #3%
+  \fi
+}
+
+%========================
+% Environment 1: WITH summing junction
+%========================
+\NewDocumentEnvironment{blockdiagram}{ O{} }
+{
+  \bdHasSumtrue
+  \pgfkeys{/blockdiagram/.cd, #1}
+
+  \begin{tikzpicture}[cbd]
+
+    % Coordinates
+    \coordinate (bdR)    at (\pgfkeysvalueof{/blockdiagram/xR},0);
+    \coordinate (bdCpos) at (\pgfkeysvalueof{/blockdiagram/xC},0);
+    \coordinate (bdPpos) at (\pgfkeysvalueof{/blockdiagram/xP},0);
+    \coordinate (bdY)    at (\pgfkeysvalueof{/blockdiagram/xY},0);
+
+    % Summing junction and diagram input anchor
+    \node[cbd/sum] (bdSum) at (0,0) {};
+    % \node at ($(bdSum.west)+(0.35,0.25)$) {\scriptsize $+$};
+    % \node at ($(bdSum.south)+(0.25,0.35)$) {\scriptsize $-$};
+    \coordinate (bdIn) at (bdSum.east);
+
+    % Reset state
+    \renewcommand{\bdCtrlOut}{}
+    \renewcommand{\bdRefLabel}{}
+}
+{
+  \end{tikzpicture}
+}
+
+%========================
+% Environment 2: NO summing junction
+%========================
+\NewDocumentEnvironment{blockdiagramnosum}{ O{} }
+{
+  \bdHasSumfalse
+  \pgfkeys{/blockdiagram/.cd, #1}
+
+  \begin{tikzpicture}[cbd]
+
+    % Coordinates
+    \coordinate (bdR)    at (\pgfkeysvalueof{/blockdiagram/xR},0);
+    \coordinate (bdCpos) at (\pgfkeysvalueof{/blockdiagram/xC},0);
+    \coordinate (bdPpos) at (\pgfkeysvalueof{/blockdiagram/xP},0);
+    \coordinate (bdY)    at (\pgfkeysvalueof{/blockdiagram/xY},0);
+
+    % Placeholder input anchor (becomes controller west once controller is created)
+    \coordinate (bdIn) at (0,0);
+
+    % Reset state
+    \renewcommand{\bdCtrlOut}{}
+    \renewcommand{\bdRefLabel}{}
+}
+{
+  \end{tikzpicture}
+}
+
+%========================
+% Commands (work in both environments)
+%========================
+
+% Reference arrow:
+% - With sum: draws into bdSum.west.
+% - No sum: stores label; controller will draw the arrow to bdC.west.
+\NewDocumentCommand{\reference}{ m }{%
+  \ifbdHasSum
+    \draw[cbd/arrow] (bdR) -- node[pos=0.5,above]{#1} (bdSum.west);
+  \else
+    \renewcommand{\bdRefLabel}{#1}
+  \fi
+}
+
+% Controller:
+% - With sum: arrow from bdIn (bdSum.east) to controller.
+% - No sum: first defines bdIn=bdC.west and draws ONE reference arrow bdR->bdC.west.
+\NewDocumentCommand{\controller}{ O{Controller} m m }{%
+  \node[cbd/block] (bdC) at (bdCpos) {#1};
+
+  \ifbdHasSum
+    % input anchor already bdSum.east
+  \else
+    \coordinate (bdIn) at (bdC.west);
+    % draw the stored reference arrow exactly once (if provided)
+    \IfEmptyTF{\bdRefLabel}{}{%
+      \draw[cbd/arrow] (bdR) -- node[pos=0.5,above]{\bdRefLabel} (bdC.west);
+    }%
+  \fi
+
+  % Draw the controller input arrow (from bdIn to bdC.west)
+  % In nosum mode, bdIn == bdC.west, so this would be zero-length; skip it there.
+  \ifbdHasSum
+    \draw[cbd/arrow] (bdIn) -- node[pos=0.5,above]{#2} (bdC.west);
+  \else
+    % In nosum, interpret #2 as the label for the incoming signal at controller input.
+    % Place it near the reference arrow instead of drawing a second arrow.
+    \IfEmptyTF{\bdRefLabel}{%
+      % If no reference arrow was provided, still annotate near controller input
+      \node[above] at ($(bdC.west)!0.5!(bdCpos)$) {#2};
+    }{%
+      % Put the controller input label slightly below the reference label to avoid overlap
+      \node[below] at ($(bdR)!0.6!(bdC.west)$) {#2};
+    }%
+  \fi
+
+  \renewcommand{\bdCtrlOut}{#3}
+}
+
+% System/Plant:
+\NewDocumentCommand{\system}{ O{System} m m }{%
+  \node[cbd/block] (bdP) at (bdPpos) {#1};
+
+  \draw[cbd/arrow] (bdC.east) --
+    node[pos=0.5,above]{\bdCtrlOut}
+    node[pos=0.5,below]{#2}
+    (bdP.west);
+
+  \draw[cbd/arrow] (bdP.east) -- node[pos=0.5,above]{#3}
+    coordinate[pos=0.5] (bdYmid)
+    (bdY);
+}
+
+% Feedback (works in both envs):
+% - With sum: returns to bdSum.south
+% - No sum: returns to bdC.west (controller input)
+\NewDocumentCommand{\feedback}{ O{} m }{%
+  \coordinate (bdFBright) at ($(bdYmid)+(0,\pgfkeysvalueof{/blockdiagram/fbY})$);
+
+  \ifbdHasSum
+    \coordinate (bdFBleft) at ($(bdSum)+(0,\pgfkeysvalueof{/blockdiagram/fbY})$);
+    \def\bdReturn{bdSum.south}
+  \else
+    \coordinate (bdFBleft) at ($(bdC.west)+(0,\pgfkeysvalueof{/blockdiagram/fbY})$);
+    \def\bdReturn{bdC.west}
+  \fi
+
+  \IfEmptyTF{#1}{%
+    \draw[cbd/arrow]
+      (bdYmid) -- (bdFBright) --
+      node[pos=0.35,above]{#2}
+      (bdFBleft) -- (\bdReturn);
+  }{%
+    \coordinate (bdFBmid) at ($(bdFBright)!0.5!(bdFBleft)$);
+    \node[cbd/block, minimum width=16mm, minimum height=10mm] (bdH) at (bdFBmid) {#1};
+
+    \draw[cbd/arrow]
+      (bdYmid) -- (bdFBright) --
+      node[pos=0.18,above]{#2}
+      (bdH.east);
+    \draw[cbd/arrow] (bdH.west) -- (bdFBleft) -- (\bdReturn);
+  }%
+}
+
+\NewDocumentCommand{\disturbance}{ O{+} O{1.6} m }{%
+  % #1 = sign to display near disturbance input (+ or -)
+  % #2 = vertical offset above the summer (positive number)
+  % #3 = disturbance label
+  %
+  % Requires: bdSum node exists (i.e., use inside blockdiagram, not blockdiagramnosum)
+
+  % disturbance source coordinate above the summer
+  \coordinate (bdD) at ($(bdSum)+(0,#2)$);
+
+  % draw disturbance arrow into the top of summer
+  \draw[cbd/arrow] (bdD) -- node[pos=0.5,left]{#3} (bdSum.north);
+
+  % mark sign near that input (just a small annotation near the north port)
+  \node at ($(bdSum.north)+(0.25,-0.25)$) {\scriptsize $#1$};
+}
+%========================
+% Examples
+%========================
+% WITH summing junction:
+% \begin{blockdiagram}
+%   \reference{$r(t)$}
+%   \controller[$C(s)$]{$e(t)$}{$u(t)$}
+%   \system[$P(s)$]{$u(t)$}{$y(t)$}
+%   \feedback{$y(t)$}
+% \end{blockdiagram}
+%
+% NO summing junction:
+% \begin{blockdiagramnosum}
+%   \reference{$r(t)$}
+%   \controller[$C(s)$]{$r(t)$}{$u(t)$}
+%   \system[$P(s)$]{$u(t)$}{$y(t)$}
+% \end{blockdiagramnosum}
+%
+% Adjust spacing:
+% \begin{blockdiagramnosum}[xC=3.8,xP=8.4,xY=12.0,fbY=-2.8]
+%   ...
+% \end{blockdiagramnosum}
+%========================

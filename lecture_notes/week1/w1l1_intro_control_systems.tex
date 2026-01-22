@@ -4,23 +4,216 @@
 \documentclass{ee122_notes}
 \input{macros.tex}
 \input{preamble.tex}
+
 \renewcommand{\releasedate}{January 21, 2026}
 \begin{document}
 
 \section*{EE 122/ME 141 Week 1, Lecture 1 (Spring 2026)}
 \subsection*{Instructor: \instructor}
 \subsection*{Date: \releasedate}
-\section{Goals}
+\section{Course Learning Outcomes}
+The course learning outcomes (CLOs) for EE 122 are listed below along with how they connect to EE program learning outcomes (PLOs) in parentheses.
+\begin{enumerate}
+  \item CLO 1: Apply advanced skills to analyze dynamics of linear systems (PLO 1)
+  \item CLO 2: Apply the knowledge of matrix theory to analyze linear systems and to design linear controls for regulating the dynamics of the system (PLO 1)
+  \item CLO 3: Gain a thorough understanding of the theory of feedback controls and stability (PLOs 1, 7)
+  \item CLO 4: Apply methods of control design including root locus, frequency domain, state space designs (PLO 1)
+  \item CLO 5: Understand the concepts of controllability and observability (PLO 1)
+  \item CLO 6: Apply the concepts of optimization to design optimal controls (PLO 1)
+  \item CLO 7: Apply control theories, control methods, and critical thinking skills to control problems of engineering systems (PLO 1, 7)
+\end{enumerate}
+
+\section{Week 1: Goals}
 \begin{itemize}
   \item Logistics, grading, extensions, expectations
   \item Motivation to study control systems 
+  \item Examples of control systems
   \item Pre-requisites to control systems: linear algebra, signals and systems
 \end{itemize}
 
-\section{Course Logistics}
-\subsection{Lecture Expectations}
-\subsection{Lab Expectations}
-\subsection{Grading Breakdown}
-\section{Why study control systems?}
+\section{Course Introduction}
+EE 122 / ME 141 is an introductory course and an entry point into the vast area of control systems and control theory. This course is perhaps the most interdisciplinary course you'll come across. The concepts in this course are directly applicable to many areas: electrical engineering (ex: how do you maintain a constant DC voltage, when needed, under disturbances?), mechanical engineering (ex: how does cruise control work?), aerospace engineering (ex: how does one navigate a drone to a desired location?), bioengineering (ex: how can we genetically engineer a crop to increase production?), biological sciences (ex: how does the brain use eyes to control hand movement?), economics (ex: how to make the most money!?). These questions are not hypothetical or far-reaching. In fact, these are questions that you can immediately answer by direct application of concepts in this course! 
 
+\subsection{Introduction to Control and Dynamical Systems}
+A dynamical system can be defined in many ways. We use the word ``dynamics'' to refer to signals that change over time. So, a dynamical system is a system whose behavior changes over time. Dynamical systems respond to external inputs/forces, disturbances, and other stimuli, and produce outputs, that are usually measurable. 
+
+What does it mean to control a system? When we talk about controlling a system, we expect to get desired outputs from the system at a particular time (or at all times). Depending on the application, sometimes we desire that the output stays constant (that is, maintains a desired setpoint) despite disturbances and noises that might affect the system. Other times, we want the output to follow a desired trajectory over time. In either case, we want to manipulate the inputs to the system (called control inputs) in order to achieve the desired outputs. To achieve this, we often use sensors that measure the output (and/or other quantities about the system). An important element in controlling dynamnical systems is a mathematical model that captures the physics of the system, and is ideally, predictive of the behavior of the system. 
+
+This course will present a formal treatment of all these concepts and equip you with the necessary tools to analyze and design control systems for a variety of applications. To setup the motivation for the field of control systems, we start by looking at examples of control problems in various areas of engineering and science. 
+
+\section{Motivation: Applications of Control Theory}
+Control theory is one of the most interdisciplinary fields of study in engineering. In fact, you will find that at the undergraduate level a course on control systems is offered by various departments: electrical engineering, mechanical engineering, aerospace engineering, chemical engineering, and sometimes even bioengineering. This is because the concepts in control theory are applicable to a wide variety of systems and each application area of engineering has its own flavor of control problems that are widely studied. Here, we look at some examples of control systems from various areas of engineering.
+
+\subsection{Examples in electrical engineering}
+
+\textbf{Temperature control}
+Temperature control is a canonical control systems problem. This application can be considered an electrical engineering problem because it involves electrical components and switches to control the temperature of a system, or a mechanical engineering problem because it involves thermal dynamics. In the temperature control problem, we want to maintain the temperature of a system (say, a room) at a desired setpoint (say, 72°F). The system is subject to disturbances (say, opening a door or window, or changes in outside temperature). So, we define two types of signals from this high-level description of the system (in this case, the system is the room with a thermostat):
+\begin{itemize}
+  \item The reference input / reference signal: this is the desired temperature setpoint (72°F). Usually denoted by $r(t)$. The temperature is set on the thermostat as the overall input to the system.
+  \item The output: this is the actual temperature of the room. Usually denoted by $y(t)$.
+\end{itemize}
+Next, we consider the controller. This is a different \textit{dynamical system} that generates hot / cool air to heat or cool the room, depending on what is needed to reach the desired reference temperature. Thus, the controller outputs a signal, which is slightly counterintuitively called, a control input, denoted by $u(t)$. It is called a control ``input'' because it is the input to the system (the room). The controller takes as one of the inputs, the reference signal $r(t)$. Then, for the controller to function properly, it would also need to know the current temperature of the room, $y(t)$ (through feedback), or have an accurate model of the system that can predict the amount of heating / cooling needed to reach the desired temperature. The controller then generates the control input $u(t)$, which is the amount of hot / cool air to be sent into the room. The block diagram in Figure~\ref{fig:temp-control} summarizes this control system.
+\begin{figure}[h]
+  \centering
+  \begin{blockdiagram}
+    \reference{$r(t)$}
+    \controller[Controller]{$e(t)$}{$u(t)$}
+    \system[Room]{}{$y(t)$}
+    \feedback[Sensor]{$y_m(t)$}
+  \end{blockdiagram}
+  \caption{A feedback control system for temperature regulation in a room. Here $e(t) = r(t) - y_m(t)$ is the error between the reference temperature and the measured temperature, $y_m(t)$.}
+  \label{fig:temp-control}
+\end{figure}
+
+What if we cannot measure the output accurately, or we do not have a sensor to measure the output? Let us look at one such example. 
+
+\textbf{Electronic throttle}
+Consider an electronic throttle in a car. The electronic throttle controls the amount of air flowing into the engine, which in turn controls the speed of the car. The driver provides an input by pressing the accelerator pedal (the gas pedal) --- the control input. If we are interested in designing the low-level control, we look at the internal valve that regulates the air flow into the engine and the output of the system will be valve position, in this case. The current valve position will then be used to decide the amount of air flowing into the engine, which will affect the speed of the car. This is called \textit{low-level control} because we are controlling the hardware at a level that directly impacts the physical system, as opposed to \textit{high-level control}, where we might be interested in the actions of the human driver (pressing the gas pedal) and looking at the overall output (speed of the car).
+
+For the case of low-level control of the electronic throttle, we might not have a sensor that measures the valve position directly. Let us assume that we have a perfect model that predicts the valve position based on the control input. In this case, we can use the model to estimate the output instead of measuring it directly. This is called \textit{open-loop control} because there is no feedback from the output to the controller. The block diagram in Figure~\ref{fig:throttle-control} summarizes this control system.
+\begin{figure}[h]
+  \centering
+  \begin{blockdiagramnosum}
+    % \reference{$r(t)$}
+    \controller[Controller]{$r(t)$}{$u(t)$}
+    \system[Electronic Throttle]{}{$y(t)$}
+  \end{blockdiagramnosum}
+  \caption{An open-loop control system for electronic throttle control. Here $e(t) = r(t)$ since there is no feedback from the output.}
+  \label{fig:throttle-control}
+\end{figure}
+
+When feedback is not available, we rely on accurate models of the system to predict the output. Feedforward control is one such method where the controller uses the model to predict the output and generate the control input accordingly. However, feedforward control is not robust to disturbances and model uncertainties, which is why feedback control is often preferred when possible. Although feedback control also has disadvantages such as it is reactive rather than proactive. 
+\subsection{Examples in mechanical engineering}
+A typical mechanical engineering control systems example is the cruise control system in automobiles. You are probably already familiar with how cruise control works in practice --- you set your desired speed using the cruise control buttons on your steering wheel, and the car automatically adjusts the throttle to maintain that speed, even when going uphill or downhill. This is achieved using a feedback control system implemented in the vehicle's microcontroller board!
+In cruise control systems, the control input is the throttle / gas pedal position that regulates the speed of the vehicle ($y(t)$). The reference input is the desired speed set by the driver ($r(t)$). We introduce a new variable --- system disturbances, denoted by $d(t)$. In this case, disturbances can be external factors that affect the speed of the vehicle, such as road incline (uphill or downhill), wind resistance, or changes in vehicle load. The controller takes the reference speed and the measured speed (from a speed sensor) as inputs and generates the control input (throttle position) to maintain the desired speed despite disturbances. The block diagram in Figure~\ref{fig:cruise-control} summarizes this control system.
+
+\begin{figure}[h]
+  \centering
+  \begin{blockdiagram}
+    \reference{$r(t)$}
+    \controller[Controller]{$e(t)$}{$u(t)$}
+    \system[Vehicle]{}{$y(t)$}
+    \feedback[Speed Sensor]{$y_m(t)$}
+  \end{blockdiagram}
+  \caption{A feedback control system for cruise control in vehicles. Here $e(t) = r(t) - y_m(t)$ is the error between the reference speed and the measured speed, $y_m(t)$.}
+  \label{fig:cruise-control}
+  \end{figure}
+
+  Alternatively, an open loop cruise controller will directly generate gas pedal positions to achieve the desired speed. The block diagram in Figure~\ref{fig:cruise-control-open} summarizes this control system.
+\begin{figure}[h]
+  \centering
+  \begin{blockdiagram}
+    \reference{$r(t)$}
+    \disturbance[]{ $d(t)$ }
+    \controller[Controller]{}{$u(t)$}
+    \system[Vehicle]{}{$y(t)$}
+  \end{blockdiagram}
+
+  \caption{An open-loop control system for cruise control in vehicles. Here $e(t) = r(t)$ since there is no feedback from the output.}
+  \label{fig:cruise-control-open}
+\end{figure}
+
+A variation of looking at the cruise control, at a lower level, would be to control the tranmission system of a car by using a gear box to change gears based on speed and torque requirements. In this case, the change of gears is the control input and the speed / torque are the outputs. The reference input could be the desired speed or torque based on the driver's input. The controller would then adjust the gear position to achieve the desired speed / torque.
+\subsection{Examples in aerospace engineering}
+In aerospace engineering, similar problems as described above arise in the context of flight control systems for aircraft and spacecraft. For example, an autopilot system, in some ways, is similar to the cruise control system in vehicles. Another example is the control of wing flaps using hydraulic actuators to maintain stability and control during flight. In this case, the control inputs is the hydraulic actuation applied to the wing flaps, and the outputs are the aircraft's pitch, roll, and yaw angles. The reference inputs are the desired flight attitudes set by the pilot or autopilot system. The controller adjusts the hydraulic actuation to maintain the desired flight attitudes despite disturbances such as turbulence or wind gusts.
+
+You can read Chapter 1 of FBS (2nd edition) for more examples of control systems. Hopefully, you are excited to learn about control systems! Make sure to take a look at the syllabus to read more about the course policies and assignment deadlines. 
+\section{Next}
+Next week, we will talk about modeling dynamical systems using differential equations, and how to represent these models using transfer functions. 
+\newpage
+\thispagestyle{empty}
+\scriptsize{
+\begin{landscape}
+
+\begin{center}
+    { \textbf{EE 122: Introduction to Control Systems}}\\[0.5em]
+    {In-Class Activity (Jan 21, 2026): Examples and Applications of Control Systems}
+\end{center}
+
+% \vspace{1em}
+
+\noindent
+\textbf{Name(s):} \rule{0.9\textwidth}{0.4pt}
+% \vspace{1.5em}
+
+\noindent
+% \textbf{Instructions:}  
+% Work in groups of \textbf{3--4 students}. Choose one example of a control system for each discipline below.  
+% You do \textbf{not} need equations—focus on concepts, intuition, and clear explanations.
+
+% \vspace{1em}
+
+\renewcommand{\arraystretch}{1.8}
+
+\noindent
+\begin{tabular}{|>{\raggedright\arraybackslash}p{2cm}
+                |>{\raggedright\arraybackslash}p{5.2cm}
+                |>{\raggedright\arraybackslash}p{5.2cm}
+                |>{\raggedright\arraybackslash}p{5.2cm}|}
+\hline
+\textbf{Topic} 
+& \textbf{EE} 
+& \textbf{ME} 
+& \textbf{AE}  \\ \hline
+
+\textbf{System description} 
+& 
+& 
+&  
+\\ \hline
+
+\textbf{Goal} 
+& 
+& 
+& 
+\\ \hline
+
+\textbf{Input} 
+& 
+& 
+& 
+\\ \hline
+
+\textbf{Output} 
+& 
+& 
+& 
+\\ \hline
+
+\textbf{Error / Disturbance} 
+& 
+& 
+& 
+\\ \hline
+
+\textbf{Usual control problem to solve} 
+& 
+& 
+& 
+\\ \hline
+
+\textbf{Block diagram (sketch)} 
+& 
+& 
+& 
+\\ \hline
+
+\textbf{How might you control it?} 
+& 
+& 
+& 
+\\ \hline
+
+\textbf{Real-life example (image or description)} 
+& 
+& 
+& 
+\\ \hline
+\end{tabular}
+% \vspace{1.5em}
+% \noindent
+% \vspace{1.5em}
+% \rule{0.95\textwidth}{0.4pt}
+\end{landscape}
+}
 \end{document}
