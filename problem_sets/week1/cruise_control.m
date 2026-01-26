@@ -24,24 +24,48 @@ Ki = 0.1;                           % integral gain
 % Simulation parameters
 vref = 20;                          % desired velocity (m/s)
 gear = 4;                           % use 4th gear
-theta = 0;                          % road slope (rad)
+
 T = [0 25];                         % time span
 
-%% Ignore: Find Equilibrium Throttle
+%% Define time-varying road slope (hill profile)
+% Hill starts at t=5s, ramps from 0 to 8 degrees between t=5 and t=6,
+% then remains at 8 degrees
+t_eval = linspace(0, 25, 101);  % evaluation points for theta_hill
+theta_hill = zeros(size(t_eval));
+for i = 1:length(t_eval)
+    t = t_eval(i);
+    if t <= 5
+        theta_hill(i) = 0;
+    elseif t <= 6
+        theta_hill(i) = 8/180 * pi * (t - 5);  % ramp from 0 to 8 degrees
+    else
+        theta_hill(i) = 8/180 * pi;  % constant 8 degrees
+    end
+end
 
-% At steady state (v = vref, dv/dt = 0), find throttle needed
+% Create interpolant for smooth theta values during ODE integration
+theta_interp = griddedInterpolant(t_eval, theta_hill, 'linear', 'nearest');
+
+%% Find Equilibrium Throttle (to initialize the integral action properly)
+
+% At steady state (v = vref, dv/dt = 0) with no slope, find throttle needed
 equilibrium_fun = @(u) (engine_force(vref, u, gear, alpha) - ...
-                        disturbance_force(vref, theta, m)) / m;
+                        disturbance_force(vref, 0, m)) / m;
 u_eq = fzero(equilibrium_fun, 0.5);
+
+% The corresponding integral error at equilibrium
+% From u = Kp*e + Ki*e_int, with e = 0 at equilibrium:
+% u_eq = Ki * e_int_eq  =>  e_int_eq = u_eq / Ki
+e_int_eq = u_eq / Ki;
 
 %% Simulate Closed-Loop System using ODE45
 
 % State: x = [v; e_integral]
 % v = velocity, e_integral = integral of error
-x0 = [vref; 0];  % start at reference velocity with zero integral error
+x0 = [vref; e_int_eq];  % start at equilibrium with correct integral error
 
 % Closed-loop dynamics
-cruise_dynamics = @(t, x) cruise_ode(t, x, vref, gear, theta, m, alpha, Kp, Ki);
+cruise_dynamics = @(t, x) cruise_ode(t, x, vref, gear, theta_interp, m, alpha, Kp, Ki);
 
 % Simulate
 [t, x] = ode45(cruise_dynamics, T, x0);
@@ -82,7 +106,7 @@ grid on;
 
 %% ODE Function for Closed-Loop System
 
-function dxdt = cruise_ode(t, x, vref, gear, theta, m, alpha, Kp, Ki)
+function dxdt = cruise_ode(t, x, vref, gear, theta_interp, m, alpha, Kp, Ki)
     % State variables
     v = x(1);           % velocity
     e_int = x(2);       % integral of error
@@ -92,6 +116,9 @@ function dxdt = cruise_ode(t, x, vref, gear, theta, m, alpha, Kp, Ki)
     
     % PI Controller
     u = Kp * e + Ki * e_int;
+    
+    % Get time-varying theta from interpolant
+    theta = theta_interp(t);
     
     % Vehicle dynamics
     F = engine_force(v, u, gear, alpha);
