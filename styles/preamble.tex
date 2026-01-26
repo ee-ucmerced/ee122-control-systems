@@ -12,7 +12,6 @@
 \usepackage{verbatim}
 \usepackage{graphicx}
 \usepackage{listings}
-\usepackage{fancyhdr}
 \usepackage{geometry}  
 \usepackage{siunitx}
 \usepackage[most]{tcolorbox}
@@ -20,6 +19,24 @@
 \usepackage{environ}
 \usepackage{pifont}
 
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{comment}
+\usepackage{fancyhdr}
+\newtcolorbox{answerbox}[1][]{%
+  colback=white,
+  colframe=black,
+  boxrule=0.6pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,
+  #1
+}
+\newcommand{\ansline}[1]{\begin{answerbox}[height=#1]\end{answerbox}}
+
+% Helpful notation
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\rad}{\mathrm{rad}}
 \usepackage[hidelinks]{hyperref}
 % -------- listings (Python) ----------
 \lstdefinestyle{py}{
@@ -40,7 +57,6 @@
 }
 
 \usepackage[american]{circuitikz}
-\usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,angles,quotes}
 \tikzset{
   >={Latex[length=2.2mm]},
@@ -117,8 +133,6 @@
 %   [xC=..., xP=..., xY=..., xR=..., fbY=...]
 %========================
 
-\usepackage{tikz}
-\usetikzlibrary{calc,positioning}
 \usepackage{xparse}
 
 % --- Namespaced styles (won't collide with your existing styles) ---

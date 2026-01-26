@@ -2,32 +2,96 @@
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
 \ProvidesPackage{ee122_labs}[2026/01/05 - v1.0 Package for EE 122/ME 141 laboratory reports]
 
-% ----- Basic packages -----
-\RequirePackage[utf8]{inputenc}
-\RequirePackage{float}
-\RequirePackage[version=3]{mhchem} % Package for equation typesetting
-\RequirePackage{siunitx} % Provides the \SI{}{} and \si{} command for typesetting SI units
-\RequirePackage{graphicx} % Required for the inclusion of images
-\RequirePackage{amsmath} % Required for some math elements 
-\RequirePackage{setspace}
-\renewcommand{\baselinestretch}{1} 
+% ----- Load all packages from preamble -----
+\input{preamble.tex}
 
-% ----- Formatting -----
+% ----- Required packages for labs (ensure tabularx and other essentials) -----
+\RequirePackage{tabularx}
+\RequirePackage{array}
+\RequirePackage{fancyhdr}
+
+% ----- Additional formatting for labs -----
 \setlength\parindent{0pt} % Removes all indentation from paragraphs
 \renewcommand{\labelenumi}{\alph{enumi}.} % Make numbering in the enumerate environment by letter rather than number
 
-% ----- Font (optional, can be commented out) -----
-\RequirePackage{times} % Times New Roman font
-% public config (overridable in macros.tex)
+% ----- Public config (overridable in document) -----
 \providecommand{\course}{EE 122}
 \providecommand{\coursetitle}{Introduction to Control Systems}
-\providecommand{\instructor}{}
+\providecommand{\instructor}{Ayush Pandey}
 \providecommand{\releasedate}{}
 \providecommand{\duedate}{}
-\providecommand{\student}{}     % so \renewcommand in macros.tex is safe
-\providecommand{\semester}{}    % "
-\providecommand{\psetnum}{1}    % default
+\providecommand{\student}{}
+\providecommand{\semester}{Fall 2025}
+\providecommand{\labnum}{1}
+\providecommand{\shorttitle}{Lab}
+
+% ----- Custom commands for lab documents -----
 \newcommand{\coursefull}{\course: \coursetitle}
 
+% Lab title command
+\newcommand{\lab}[1]{\gdef\@lab{#1}}
+\newcommand{\submitdate}[1]{\gdef\@submitdate{#1}}
+\providecommand{\@submitdate}{\today}
+\providecommand{\@lab}{Laboratory Report}
+
+\makeatletter
+
+% ----- Pre-lab quiz environment (similar to notes popquiz, no solutions) -----
+% Usage: \begin{prelabquiz}[optional options] ... \end{prelabquiz}
+% Numbered within sections; remove number within=section for global numbering.
+\newtcolorbox[
+  auto counter,
+  number within=section
+]{prelabquiz}[1][]{%
+  enhanced jigsaw,
+  breakable,
+  colback=gray!10,
+  colframe=black,
+  fonttitle=\bfseries,
+  title={Pre-Lab Quiz \thetcbcounter: Make sure you're ready for the lab!},
+  label={prelabquiz-\thetcbcounter},
+  #1
+}
+
+% ----- LABMANUAL environment: Full-width header box for lab manual -----
+% Contains: Release Date, Due Date, Course, Experiment Number
+\newenvironment{labmanual}{%
+  \noindent\framebox[\linewidth]{%
+    \parbox{\linewidth}{%
+      \vspace{0.25em}
+      \centerline{\coursefull}
+      \vspace{0.4em}%
+      \centerline{\instructor}
+      \vspace{0.4em}
+      \centerline{\bfseries \@lab}
+      \vspace{0.4em}%
+      \begin{tabularx}{\linewidth}{@{} l >{\raggedright\arraybackslash}X r @{} }
+        \textbf{Released:} \releasedate & & \textbf{Due:} \duedate \\
+      \end{tabularx}
+    }%
+  }\par\vspace{0.75\baselineskip}%
+}{%
+  \vspace{0.5em}%
+}
+
+% ----- LABWORK environment: Full-width header box for student worksheet -----
+% Optional argument: a centered title inside the box. Usage: \begin{labwork}[In-Lab Worksheet] ...
+% Contains: Due Date, Student Name, Grade Received
+\newenvironment{labwork}[1][]{%
+  \noindent\framebox[\textwidth]{%
+    \parbox{\textwidth}{%
+      \vspace{0.2em}
+      \ifx\empty#1\empty\else\centerline{\bfseries #1}\vspace{0.25em}\fi
+      \begin{tabularx}{\linewidth}{@{} l >{\raggedright\arraybackslash}X r @{} }
+        \textbf{Due:} \duedate & \textbf{Name:} \underline{\hspace{3cm}} & \textbf{Grade:} \underline{\hspace{1cm}} \\
+      \end{tabularx}
+      \vspace{0.2em}
+    }%
+  }\par\vspace{0.5\baselineskip}%
+}{%
+  \vspace{0.3em}%
+}
+
+\makeatother
 
 \endinput
