@@ -1,0 +1,107 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+
+\renewcommand{\releasedate}{January 28, 2026}
+\begin{document}
+
+\section*{EE 122/ME 141 Week 2, Lecture 2 (Spring 2026)}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Goals}
+
+\subsection{Homogeneous solution}
+The homogeneous solution is the response when the input is zero. For a second-order system,
+\[
+\ddot{y} + 2\zeta\omega_n \dot{y} + \omega_n^2 y = 0,
+\]
+the homogeneous solution is determined by the characteristic equation
+\[
+s^2 + 2\zeta\omega_n s + \omega_n^2 = 0.
+\]
+
+\subsection{Particular solution}
+The particular solution is any one solution that matches the forcing input. For example, a constant (step) input often yields a constant steady-state output, while a sinusoidal input yields a sinusoidal steady-state output at the same frequency, with an amplitude and phase determined by the transfer function.
+
+\subsection{Impulse and step as standard test inputs}
+Two canonical inputs are:
+\[
+u(t)=\delta(t) \quad \text{(impulse)}, \qquad u(t)=u(t) \quad \text{(unit step)}.
+\]
+The impulse response is the output to $\delta(t)$ with zero initial conditions. The step response is the output to a unit step with zero initial conditions. These are forced responses. In contrast, a free-decay pendulum release is a zero-input response driven by nonzero initial conditions.
+
+\begin{popquiz}
+A second-order system has transfer function $G(s)=\frac{k}{s^2+2\zeta\omega_n s+\omega_n^2}$. Write an expression for $Y(s)$ for (i) an impulse input and (ii) a unit-step input. Do not invert the transforms.
+\popqsplit
+For an impulse, $U(s)=1$, so
+\[
+Y(s)=G(s)=\frac{k}{s^2+2\zeta\omega_n s+\omega_n^2}.
+\]
+For a unit step, $U(s)=1/s$, so
+\[
+Y(s)=\frac{k}{s\left(s^2+2\zeta\omega_n s+\omega_n^2\right)}.
+\]
+\end{popquiz}
+
+\section{Natural frequency, damping, and damped frequency}
+Second-order dynamics are everywhere: suspensions, doors, elevators, robots, and even sensor filtering. The parameters $\omega_n$ and $\zeta$ are a compact way to describe what the system does.
+
+\subsection{Natural frequency $\omega_n$}
+\textbf{Interpretation.} Roughly, $\omega_n$ sets the time scale of oscillation. For lightly damped systems, the oscillations are close to frequency $\omega_n$.
+
+\textbf{Example interpretation.} Two car suspensions can have the same damping ratio but different $\omega_n$. The one with larger $\omega_n$ responds faster and oscillates more rapidly.
+
+\subsection{Damping and damping ratio $\zeta$}
+\textbf{Interpretation.} Damping describes how quickly oscillations die out. The dimensionless damping ratio $\zeta$ classifies the response:
+\[
+0<\zeta<1 \ \text{underdamped (oscillatory)}, \qquad
+\zeta=1 \ \text{critically damped}, \qquad
+\]
+\[
+\zeta>1 \ \text{overdamped (non-oscillatory)}.
+\]
+
+\textbf{Example interpretation.} A door closer is designed to avoid oscillation. Its effective damping ratio is typically at or above $1$ so the door returns smoothly without bouncing.
+
+\subsection{Damped frequency $\omega_d$ and its dependence on $\zeta$}
+For the characteristic equation
+\[
+s^2 + 2\zeta\omega_n s + \omega_n^2 = 0,
+\]
+the roots are
+\[
+s = -\zeta\omega_n \pm \omega_n\sqrt{\zeta^2-1}.
+\]
+When $0<\zeta<1$, the roots are complex:
+\[
+s = -\zeta\omega_n \pm j\omega_n\sqrt{1-\zeta^2}.
+\]
+The oscillation frequency is the imaginary part:
+\[
+\omega_d = \omega_n\sqrt{1-\zeta^2}.
+\]
+As damping increases (larger $\zeta$), the oscillation frequency decreases.
+
+\begin{popquiz}
+A system has $\omega_n=10$ rad/s. Compute $\omega_d$ for (i) $\zeta=0.1$, (ii) $\zeta=0.6$, and (iii) $\zeta=1.2$. State which cases oscillate.
+\popqsplit
+For $0<\zeta<1$, $\omega_d=\omega_n\sqrt{1-\zeta^2}$.
+(i) $\omega_d=10\sqrt{1-0.01}=10\sqrt{0.99}\approx 9.95$ rad/s, oscillatory.
+(ii) $\omega_d=10\sqrt{1-0.36}=10\sqrt{0.64}=8$ rad/s, oscillatory.
+(iii) $\zeta>1$ means no oscillation; the poles are real and the response is overdamped.
+\end{popquiz}
+
+\section{Poles as roots of the characteristic equation}
+For a transfer function
+\[
+G(s)=\frac{N(s)}{D(s)},
+\]
+the poles are the roots of $D(s)$. Poles determine the natural response and the transient behavior. In the second-order case,
+\[
+D(s)=s^2+2\zeta\omega_n s+\omega_n^2,
+\]
+so the pole locations encode both the decay rate (real part) and oscillation frequency (imaginary part). This is why identifying $\zeta$ and $\omega_n$ from a free-decay experiment is still a meaningful modeling task: it identifies the dominant poles of the dynamics.
+\end{document}
