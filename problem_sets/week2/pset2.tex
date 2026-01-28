@@ -1,0 +1,33 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+
+
+\documentclass{ee122_pset}
+
+% Assignment info
+\author{\rule{3cm}{0.4pt}} % Name placeholder
+\submitdate{\rule{3cm}{0.4pt}} % Submission date placeholder
+\problemset{Problem Set \#2: Modeling Dynamical Systems}
+\renewcommand{\duedate}{February 4, 2026}
+\shorttitle{Problem Set \#2}
+
+\begin{document}
+
+% Problem 1
+\problem{1}
+As discussed during the lectures, modeling the system that we are interested in controlling is the first and a necessary task because without a model, we cannot design controllers or analyze system performance. You are familiar with differential equation models. In this problem, your goal is to derive state-space representation of dynamical systems starting from an ODE and relate the transfer function representation to the state-space representation.
+
+\problempart \textbf{[25 points]} An ordinary differential equation (ODE) representation of a single-input single-output (SISO) linear time-invariant (LTI) dynamical system can be given as follows (same as equation 3.7 in FBS 2nd Edition textbook):
+\[
+\frac{d^n y(t)}{d t^n} + a_1 \frac{d^{n-1} y(t)}{d t^{n-1}} + a_2 \frac{d^{n-2} y(t)}{d t^{n-2}} + \ldots + a_{n-1} \frac{d y(t)}{d t} + a_n y(t) = u(t)
+\]
+
+For this ODE, assuming zero initial conditions, derive the transfer function representation \( G(s) = \frac{Y(s)}{U(s)} \) of the system by taking the Laplace transform of both sides of the ODE.
+
+\problempart \textbf{[25 points]} Solve Exercise 3.1 in FBS (2nd Edition) textbook, which is based on the equation above.
+
+\problempart \textbf{[25 points]} For n = 2, i.e., for a second-order system, get the parameter values that are consistent with the parameters you identified in the Lab 1 experiment for the pendulum setup that was assigned to you. To do this, write the transfer function as in part (a) above and compare with the transfer function used in the lab to find out the values for $a_1$ and $a_2$. Then, write the state-space representation numerically as well (following your result from part (b)). Compute the eigenvalues of the system matrix \( A \) in the state-space representation and the roots of the denominator of the transfer function. Comment on your results.
+
+\problempart \textbf{[25 points]} Implement the second-order system you derived in part (c) in MATLAB or Python to create a \texttt{System} object. In MATLAB, you can use the \texttt{ss} function and in Python control, you can use the \texttt{control.ss}\footnote{Documentation reference for state-space models: \url{https://python-control.readthedocs.io/en/latest/generated/control.ss.html}} method. Using the \texttt{step} function in MATLAB or \texttt{control.step\_response}\footnote{Documentation reference for step response: \url{https://python-control.readthedocs.io/en/latest/generated/control.step\_response.html}} method in Python control, plot the step response of the system. Label your axes and include a title for your plot. Comment on the characteristics of the step response (rise time, settling time, overshoot, steady-state value, etc.) based on the parameters of your system.
+\end{document}
