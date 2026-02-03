@@ -1,0 +1,590 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+
+\renewcommand{\releasedate}{January 28, 2026}
+
+% Simple axis helpers
+\newcommand{\stepaxes}{%
+\begin{tikzpicture}[x=0.55cm,y=0.75cm,baseline]
+  % axes: first quadrant
+  \draw[-{Stealth[length=2mm]}] (0,0) -- (7,0) node[below] {$t$};
+  \draw[-{Stealth[length=2mm]}] (0,0) -- (0,4) node[left] {$y(t)$};
+  % light ticks (optional)
+  \foreach \x in {1,2,3,4,5,6} \draw (\x,0) -- (\x,0.12);
+  \foreach \y in {1,2,3} \draw (0,\y) -- (0.12,\y);
+\end{tikzpicture}%
+}
+
+\newcommand{\impaxes}{%
+\begin{tikzpicture}[x=0.55cm,y=0.75cm,baseline]
+  % axes: first and fourth quadrants (t >= 0, y can be +/-)
+  \draw[-{Stealth[length=2mm]}] (0,0) -- (7,0) node[below] {$t$};
+  \draw[-{Stealth[length=2mm]}] (0,-3) -- (0,3) node[left] {$y(t)$};
+  % light ticks (optional)
+  \foreach \x in {1,2,3,4,5,6} \draw (\x,0) -- (\x,0.12);
+  \foreach \y in {-2,-1,1,2} \draw (0,\y) -- (0.12,\y);
+\end{tikzpicture}%
+}
+
+\begin{document}
+
+% (No header here — assumes ee122_notes style is already set up in the main file.)
+
+\section*{Week 3, Lecture 1: Response of Systems Using State-Space}
+
+\subsection*{Learning goals}
+By the end of this lecture, you should be able to:
+\begin{itemize}
+  \item explain how ODE, transfer function, and state-space models relate to each other,
+  \item write a state-space model for linear systems and recognize that it is not unique,
+  \item state and validate the dimensions of $A,B,C,D$ matrices in state-space models.
+\end{itemize}
+
+\subsection*{Recap}
+For the past two weeks, we have focused on two main ideas:
+\begin{enumerate}
+  \item Week 1: Examples of control systems in real life and how we can draw block diagrams to show these systems.
+  \item Week 2: Modeling of dynamical systems using ordinary differential equations and transfer functions.
+\end{enumerate}
+
+\section{Models of dynamical systems --- three perspectives}
+A foundational way to model physical systems is with an ordinary differential equation (ODE) in the time domain.
+This is the description that mathematicians use and prefer: it directly encodes how derivatives of variables relate to various inputs and parameters and allows for maximum flexibility in modeling.
+
+For engineers who are designing systems, we often want representations that can quickly provide insight into system behavior and presents the information about what can be changed to get a desired behavior. Transfer functions (TF) descriptions provide this. With TFs, we are able to quickly read off properties in the frequency domain such as poles, stability, time constants, bandwidth --- properties that we are often interested in optimizing. The transfer function is not a new physics model, it is just a convenient
+representation obtained by transforming the ODE into the $s$-domain using Laplace transform.
+
+Finally, state-space (SS) is essentially an ODE rewritten in a particular structured way. This is essentially ``dressing up'' the ODE in a special way that is useful to us. It is still time-domain dynamics but organized into first-order vector form so that the linearity of the systems is obvious from the system model. Recall how when you think of something that is linear, you think of ``$y = mx + b$'' style equation. That is precisely the idea with state space models. We write ODEs in a form that looks like ``$\dot{x} = A x + B u$'' which is linear in $x$ and $u$ and collects all the terms that are derivatives on the left-hand side.
+
+Between these three perspectives of modeling a system, a useful mental map is:
+\[
+\text{ODE (time domain)}
+\;\;\longleftrightarrow\;\;
+\text{TF (frequency domain)}
+\]
+and 
+\[
+\text{ODE (time domain)}
+\;\;\longleftrightarrow\;\;
+\text{SS (time domain)}.
+\]
+
+\subsection{Example: A first-order system}
+Consider the first-order linear system
+\[
+\frac{dy}{dt} + k\,y = u.
+\]
+This is an ODE model in the time domain. Taking the Laplace transform (assuming zero initial conditions), we get
+\[
+sY(s) + kY(s) = U(s)
+\quad\Rightarrow\quad
+\frac{Y(s)}{U(s)} = \frac{1}{s+k}.
+\]
+This is the transfer function representation in the frequency domain. Finally, if you define a state such as
+\[
+x = y.
+\]
+Then
+\[
+\dot{x} = \dot{y} = -k y + u = -k x + 1\cdot u,
+\]
+so one valid state-space model is
+\[
+\dot{x} = A x + B u,
+\qquad
+A = [-k],
+\qquad
+B = [1].
+\]
+
+However, state-space representation is not unique! Different state choices can describe the same input-output behavior and lead to different matrices of the system. For example, define a new state
+\[
+x = 2y.
+\]
+Differentiate:
+\[
+\dot{x} = 2\dot{y}.
+\]
+From the ODE, $\dot{y} = -k y + u$. Multiply by $2$:
+\[
+\dot{x} = 2(-k y + u) = -2k y + 2u.
+\]
+Now substitute $y = x/2$:
+\[
+\dot{x} = -2k\left(\frac{x}{2}\right) + 2u = -k x + 2u.
+\]
+So another valid state-space model is
+\[
+\dot{x} = A x + B u,
+\qquad
+A = [-k],
+\qquad
+B = [2].
+\]
+This is the same physical system but with a different state definition we end up with a different B matrix, showing us that the state space models are not unique. Let us formally build the definition of state-space models.
+
+\section{State-space representation of linear systems}
+\subsection{States as a vector}
+The first key idea in developing a state space model is the following:
+\begin{quote}
+If a system is $n$th order, then we need $n$ states to describe the system.
+\end{quote}
+
+Let us call these states $x_1, x_2, \ldots, x_n$. Each state is a variable that describes some aspect of the system. For example, in a mechanical system, states can be positions and velocities of various masses. In an electrical system, states can be voltages across capacitors and currents through inductors.
+
+We collect the states into a vector
+\[
+\textbf{x} \;=\;
+\begin{bmatrix}
+x_1\\
+x_2\\
+\vdots\\
+x_n
+\end{bmatrix}
+\in \mathbb{R}^{n\times 1}.
+\]
+This is a column vector or a column matrix with $n$ rows and $1$ column.
+
+\subsection{State equation that describes the dynamics}
+For a linear system, the dynamics can be written as the linear differential equation
+\[
+\dot{\textbf{x}} = A \textbf{x} + B u.
+\]
+
+In this lecture we focused on the single-input case where the input is a scalar:
+\[
+u \in \mathbb{R}
+\]
+however, in general, the input can be a vector as well when you have multiple inputs that control a system.
+
+\begin{popquiz}
+What are the sizes of $A$ and $B$ matrices in
+\[
+\dot{\textbf{x}} = A \textbf{x} + B u,
+\qquad
+\textbf{x} \in \mathbb{R}^{n\times 1},
+\qquad
+u \in \mathbb{R}?
+\]
+\popqsplit
+Since $\dot{\textbf{x}}\in\mathbb{R}^{n\times 1}$ and $\textbf{x}\in\mathbb{R}^{n\times 1}$, we need
+\[
+A \in \mathbb{R}^{n\times n}.
+\]
+Also, since $u$ is scalar, $Bu$ must land in $\mathbb{R}^{n\times 1}$, so
+\[
+B \in \mathbb{R}^{n\times 1}.
+\]
+\end{popquiz}
+
+\subsection{Outputs and the output equation}
+If the system has $m$ outputs $y_1, y_2, \ldots, y_m$, we collect them into a column vector
+\[
+\textbf{y} \;=\;
+\begin{bmatrix}
+y_1\\
+y_2\\
+\vdots\\
+y_m
+\end{bmatrix}
+\in \mathbb{R}^{m\times 1}.
+\]
+
+To complete the system description, we write the following linear output equation:
+\[
+\textbf{y} = C\textbf{x} +  D u.
+\]
+
+\begin{popquiz}
+What are the sizes of $C$ and $D$ matrices in
+\[
+\textbf{y} = C\textbf{x} +  D u,
+\qquad
+\textbf{x} \in \mathbb{R}^{n\times 1},
+\qquad
+\textbf{y} \in \mathbb{R}^{m\times 1},
+\qquad
+u \in \mathbb{R}?
+\]
+\popqsplit
+We need $C\textbf{x} \in \mathbb{R}^{m\times 1}$ with $\textbf{x}\in\mathbb{R}^{n\times 1}$, so
+\[
+C \in \mathbb{R}^{m\times n}.
+\]
+Also $Du$ must be in $\mathbb{R}^{m\times 1}$ with scalar $u$, so
+\[
+D \in \mathbb{R}^{m\times 1}.
+\]
+\end{popquiz}
+\section{Example: A second-order system }
+To highlight why state-space is a useful model ``language,'' we revisit a standard second-order system from last lecture. Consider a spring-mass-damper with input force $F(t)$ and output position $q(t)$ (review last week's notes if needed, we will not repeat the derivation here). The ODE model is
+\[
+m\ddot{q} + b\dot{q} + k q = F(t)
+\]
+where $q$ is the position of the mass, $m$ is the mass, $b$ is the damping coefficient, and $k$ is the spring constant.
+Using Laplace transform with zero initial conditions, the transfer function from input $F$ to output $q$ is
+\[
+\frac{Q(s)}{F(s)} = \frac{1}{m s^2 + b s + k}.
+\]
+
+At this point, recall the three model ``languages'' and how they connect:
+\[
+\text{ODE (time domain)} \;\longleftrightarrow\; \text{TF (frequency domain)},
+\qquad
+\text{ODE (time domain)} \;\longleftrightarrow\; \text{SS (time domain)}.
+\]
+Our goal now is to rewrite the ODE as a linear state-space model that we have just developed above.:
+\[
+\;\dot{x} = Ax + Bu,\qquad y = Cx + Du.\;
+\]
+For this example, we have only one input --- the force $F(t)$ --- and one output --- the position $q(t)$. The output variable is something that, as an engineer, you care about measuring or controlling. So we have
+\[
+u = F, \qquad y = q.
+\]
+
+How to get a state-space model from the ODE? The key idea is to define states that describe the system. Since this is a second-order ODE, we need two states. A natural physical choice is:
+\[
+x_1 = q \quad \text{(position)},\qquad x_2 = \dot{q} \quad \text{(velocity)}.
+\]
+Collect into the state vector:
+\[
+x =
+\begin{bmatrix}
+x_1\\
+x_2
+\end{bmatrix}.
+\]
+For now we also choose the output to be position:
+\[
+y = q = x_1.
+\]
+
+Now, note that the state-space model requires us to write $\dot{x}$ in terms of $x$ and $u$. That is, we need 
+\[  
+\dot{x} = \begin{bmatrix} \dot{x}_1 \\ \dot{x}_2 \end{bmatrix} = A \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} + B u.
+\]
+So we need to find expressions for $\dot{x}_1$ and $\dot{x}_2$ first. 
+\begin{popquiz}
+From the state definitions, write $\dot{x}_1$ and $\dot{x}_2$ in terms of $x_1$, $x_2$, and $u=F$.
+Use the ODE
+\[
+m\ddot{q} + b\dot{q} + kq = F(t).
+\]
+\popqsplit
+By definition,
+\[
+\dot{x}_1 = \dot{q} = x_2.
+\]
+Also $\dot{x}_2 = \ddot{q}$. Solve the ODE for $\ddot{q}$:
+\[
+m\ddot{q} = F - b\dot{q} - kq
+\quad\Rightarrow\quad
+\ddot{q} = -\frac{k}{m}q - \frac{b}{m}\dot{q} + \frac{1}{m}F.
+\]
+Substitute $q=x_1$, $\dot{q}=x_2$, and $u=F$:
+\[
+\dot{x}_2 = -\frac{k}{m}x_1 - \frac{b}{m}x_2 + \frac{1}{m}u.
+\]
+\end{popquiz}
+
+\subsection{State equation matrices: $A$ and $B$}
+We want to match
+\[
+\dot{x} =
+\begin{bmatrix}
+\dot{x}_1\\
+\dot{x}_2
+\end{bmatrix}
+=
+A
+\begin{bmatrix}
+x_1\\
+x_2
+\end{bmatrix}
++
+B u.
+\]
+
+Start with the ``blank template'', these are our holes to fill in (as you are starting to work with state-space models, I highly recommend that you write these blank templates down to help you organize your thoughts because matrix products can get confusing):
+\[
+\begin{bmatrix}
+\dot{x}_1\\
+\dot{x}_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+\Box & \Box\\
+\Box & \Box
+\end{bmatrix}
+\begin{bmatrix}
+x_1\\
+x_2
+\end{bmatrix}
++
+\begin{bmatrix}
+\Box\\
+\Box
+\end{bmatrix}u.
+\]
+
+Now use the two scalar equations:
+\[
+\dot{x}_1 = x_2
+\qquad\Rightarrow\qquad
+\dot{x}_1 = 0\cdot x_1 + 1\cdot x_2 + 0\cdot u,
+\]
+\[
+\dot{x}_2 = -\frac{k}{m}x_1 - \frac{b}{m}x_2 + \frac{1}{m}u.
+\]
+
+So the filled matrices are:
+\[
+A =
+\begin{bmatrix}
+0 & 1\\[4pt]
+-\dfrac{k}{m} & -\dfrac{b}{m}
+\end{bmatrix},
+\qquad
+B =
+\begin{bmatrix}
+0\\[4pt]
+\dfrac{1}{m}
+\end{bmatrix}.
+\]
+
+\subsection{Output equation: $C$ and $D$ matrices}
+We chose $y=q=x_1$. Match
+\[
+y = Cx + Du.
+\]
+Start with the ``blank template'':
+\[
+y =
+\begin{bmatrix}
+\Box & \Box
+\end{bmatrix}
+\begin{bmatrix}
+x_1\\
+x_2
+\end{bmatrix}
++
+\begin{bmatrix}
+\Box
+\end{bmatrix}u.
+\]
+Since $y=x_1$, we have
+\[
+y = 1\cdot x_1 + 0\cdot x_2 + 0\cdot u,
+\]
+so
+\[
+C = \begin{bmatrix} 1 & 0 \end{bmatrix},
+\qquad
+D = \begin{bmatrix} 0 \end{bmatrix}.
+\]
+
+\subsection{Unique or not?}
+State-space is a representation, so $A,B,C,D$ are \emph{not unique}. Let us try a different state definition and see if it leads to different $A,B$ matrices.
+For example, one straightforward way to change the definitions is to scale or mix the states. Let us try:
+\[
+\tilde{x}_1 = 2q,\qquad \tilde{x}_2 = \dot{q}.
+\]
+This will change the numerical entries in the matrices because the coordinates changed, even though the underlying physics did not. More formally, for an invertible change of coordinates $\tilde{x}=Tx$ (with $T$ invertible), the same dynamics can be written with a different pair $(\tilde{A},\tilde{B})`$.
+
+Also, if instead of position you care about velocity, you could define
+\[
+y = \dot{q} = x_2
+\quad\Rightarrow\quad
+C = \begin{bmatrix}0 & 1\end{bmatrix},\;\; D=0.
+\]
+Or you might care about a combination like $y = q + \alpha \dot{q}$, giving
+\[
+C = \begin{bmatrix}1 & \alpha\end{bmatrix},\;\; D=0.
+\]
+
+Finally, sometimes the output can include the input directly:
+\[
+y = Cx + Du,\qquad D\neq 0.
+\]
+This happens when the measured quantity depends instantaneously on the input. For example, if an actuator force is measured through a sensor whose reading includes a direct feedthrough term, or if the output is defined as a combination of state and applied force, then you can have the case above.
+
+What we have just built (not the variants, the fully built matrices $A$, $B$, $C$, $D$ above) is the \textbf{chain of integrators form} of state-space representation.
+The choice
+\[
+x_1=q,\qquad x_2=\dot{q}
+\]
+produces a structure where the first state is the integral of the second:
+\[
+\dot{x}_1 = x_2.
+\]
+This is why this canonical construction is often called the \emph{chain of integrators} form: higher derivatives become downstream states, and the top states are obtained by integrating.
+
+\subsection{Connections between TF and SS}
+To connect the state space model back to transfer functions, let us look at the numerical values. Use the following values for the parameters:
+\[
+m=\frac{1}{6},\qquad b=\frac{5}{6},\qquad k=1.
+\]
+Then
+\[
+\frac{Q(s)}{F(s)}
+=
+\frac{1}{ms^2+bs+k}
+=
+\frac{1}{\frac{1}{6}s^2+\frac{5}{6}s+1}
+=
+\frac{6}{s^2+5s+6}.
+\]
+So the denominator polynomial is
+\[
+s^2+5s+6.
+\]
+
+With these same parameters, the state matrix becomes
+\[
+A=
+\begin{bmatrix}
+0 & 1\\[2pt]
+-\dfrac{k}{m} & -\dfrac{b}{m}
+\end{bmatrix}
+=
+\begin{bmatrix}
+0 & 1\\
+-6 & -5
+\end{bmatrix}.
+\]
+
+The eigenvalues of $A$ are the roots of its characteristic equation:
+\[
+\det(\lambda I - A)=0.
+\]
+Compute:
+\[
+\lambda I - A
+=
+\begin{bmatrix}
+\lambda & -1\\
+6 & \lambda+5
+\end{bmatrix}
+\quad\Rightarrow\quad
+\det(\lambda I-A)=\lambda(\lambda+5)+6.
+\]
+So
+\[
+\lambda^2+5\lambda+6=0.
+\]
+
+Key observation: this is the same polynomial as the TF denominator (up to swapping $s$ with $\lambda$).
+This is not a coincidence: for a realization of an LTI system, the dynamics of the homogeneous system $\dot{x}=Ax$
+govern the natural response, and those modes are captured by the eigenvalues of $A$. The transfer function poles
+describe the same natural modes.
+
+So, we have the important equivalence:
+\[
+\text{eigenvalues of }A \;=\; \text{roots of characteristic equation} \;=\; \text{poles of the TF}
+\]
+and these correspond to the modes of the system and its natural response.
+
+\section{In-class activity: sketching step and impulse responses}
+Next, we will do a short in-class activity where you sketch a nominal step response and impulse response for three real-life second-order systems (see last page). The goal is to connect the second order dynamics to what you expect to see in reality (overshoot, oscillations, settling, etc.). We will follow-up on this activity next lecture when we formally define step and impulse responses.
+ 
+\section{Next lecture preview}
+Next time:
+\begin{itemize}
+  \item step response and impulse response,
+  \item how to compute these using transfer functions,
+  \item performance metrics from responses: overshoot, settling time, rise time, steady-state value.
+\end{itemize}
+
+\newpage
+\scriptsize
+
+\noindent
+\textbf{EE 122: Feb 2 In-class activity on step and impulse response}
+\hfill
+
+\textbf{Names:} \rule{2.9in}{0.4pt}
+
+\vspace{0.4em}
+\noindent
+\vspace{0.6em}
+
+% --- Three panels ------------------------------------------------------------
+\noindent
+\begin{minipage}[t]{0.32\textwidth}
+\textbf{Example 1: Car suspension system}
+
+\vspace{0.3em}
+\textbf{Step Input:} The car drives onto a raised curb and then stays on that new road height. The suspension compresses to a new equilibrium height and settles there.
+
+\vspace{0.4em}
+\textbf{Impulse Input:} The car hits a pothole or bump very quickly and then the road returns to normal. The suspension receives a sudden jolt and then the car body oscillates and settles back to its original height.
+
+\vspace{0.7em}
+\textbf{Sketch nominal step response:}
+\vspace{0.2em}
+
+\stepaxes
+
+\vspace{0.8em}
+\textbf{Sketch nominal impulse response:}
+\vspace{0.2em}
+
+\impaxes
+\end{minipage}
+\hfill
+\vrule width 0.8pt
+\hfill
+\begin{minipage}[t]{0.32\textwidth}
+\textbf{Example 2: Hydraulic door closer on a heavy door}
+
+\vspace{0.3em}
+\textbf{Step Input:} You open the door to a fixed angle and hold it there. When you release it, the closer drives the door toward the closed position and it settles shut.
+
+\vspace{0.4em}
+\textbf{Impulse Input:} Someone gives the door a quick shove and immediately lets go. The door briefly moves faster than usual, then the closer resists motion and the door returns toward closed with decreasing oscillations.
+
+\vspace{0.7em}
+\textbf{Sketch nominal step response:}
+\vspace{0.2em}
+
+\stepaxes
+
+\vspace{0.8em}
+\textbf{Sketch nominal impulse response:}
+\vspace{0.2em}
+
+\impaxes
+\end{minipage}
+\hfill
+\vrule width 0.8pt
+\hfill
+\begin{minipage}[t]{0.32\textwidth}
+\textbf{Example 3: Mass hanging from a spring (with damping)}
+
+\vspace{0.3em}
+\textbf{Step Input:} You suddenly add a weight to the spring and keep it attached. The mass moves to a new equilibrium extension and settles there after transient motion.
+
+\vspace{0.4em}
+\textbf{Impulse Input:} You tap the mass downward quickly and let go. The mass gets a sudden kick and then oscillates about equilibrium with decreasing amplitude until it comes to rest.
+
+\vspace{0.7em}
+\textbf{Sketch nominal step response:}
+\vspace{0.2em}
+
+\stepaxes
+
+\vspace{0.8em}
+\textbf{Sketch nominal impulse response:}
+\vspace{0.2em}
+
+\impaxes
+\end{minipage}
+
+\vspace{0.6em}
+\noindent
+
+\end{document}
