@@ -1,0 +1,237 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+
+\renewcommand{\releasedate}{February 4, 2026}
+
+\begin{document}
+
+\section*{EE 122/ME 141 Week 3, Lecture 2 (Spring 2026)}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+
+\section{Learning objectives}
+By the end of this lecture, you should be able to:
+\begin{itemize}
+  \item understand the dynamical properties of systems using its response to standard inputs (step and impulse);
+  \item compute the properties for a given choice of parameters that model the system.
+\end{itemize}
+
+\section{Recap}
+So far, we have discussed various modeling techniques for dynamical systems including ODEs, transfer functions, and state-space representations. When you apply an input to the system, $u$, you observe an output $y$. Is this output good enough for your application? How do we even define what ``good enough'' means? To answer these questions, we need to analyze the system's response to standard inputs. Then, when we have another input, we may be able to combine the standard responses to predict the output (since we are interested in LTI systems). Once you have this system response, and you know it is not good enough (or you want to do better!), that is when we aim to design a controller system that generates ``better'' input values $u$ (control actions) to achieve desired output $y$ with properties that you want for your application. The first step is to define these properties --- precisely what we will do in this lecture.
+
+\subsection*{The step input}
+We will denote the step input as $u_s(t)$. It is a signal that is zero for $t<0$ and one for $t\ge 0$:
+\[
+u_s(t) = \begin{cases}
+0, & t<0,\\
+1, & t\ge 0.
+\end{cases}
+\]
+Figure~\ref{fig:step_input} shows the step input signal.
+\begin{figure}
+    \centering 
+    \begin{tikzpicture}
+    \begin{axis}[
+        axis lines=middle,
+        xlabel={$t$},
+        ylabel={$u_s(t)$},
+        xtick={0},
+        ytick={0,1},
+        ymin=-0.5, ymax=1.5,
+        xmin=-2, xmax=4,
+        domain=-2:4,
+        samples=400,
+        width=10cm,
+        height=5cm,
+        ]
+        \addplot[thick,blue] {x < 0 ? 0 : 1};
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Step input signal $u_s(t)$.}
+    \label{fig:step_input}
+\end{figure}
+\subsection{The impulse input}
+The other common input to a system is an impulse input, denoted as $\delta(t)$ --- the Dirac delta function. It is not a function in the traditional sense, but rather a distribution that is zero everywhere except at $t=0$, where it is infinitely high such that its integral over time is equal to one:
+\[
+\int_{-\infty}^{\infty} \delta(t) dt = 1.
+\]
+Figure~\ref{fig:impulse_input} shows the impulse input signal.
+\begin{figure}
+    \centering 
+    \begin{tikzpicture}
+    \begin{axis}[
+        axis lines=middle,
+        xlabel={$t$},
+        ylabel={$\delta(t)$},
+        xtick={0},
+        ytick={0},
+        ymin=-0.5, ymax=4,
+        xmin=-2, xmax=2,
+        domain=-2:2,
+        samples=400,
+        width=10cm,
+        height=5cm,
+        ]
+        \addplot[thick,blue] {x == 0 ? 1 : 0};
+        \draw[thick,blue] (axis cs:0,0) -- (axis cs:0,4);
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Impulse input signal $\delta(t)$.}
+    \label{fig:impulse_input}
+\end{figure}
+
+\section{Properties of step response}
+We now develop various properties of the system response to a step input. These properties help us understand how the system behaves dynamically and whether it meets the performance requirements for a given application.
+\subsection{Accuracy at steady state (steady-state error)}
+The steady-state error $e_{ss}$ is the difference between the desired output (reference input) and the actual output of the system as time approaches infinity. For a unit step input, if the desired output is $r(t) = 1$ for $t \ge 0$, then the steady-state error is defined as:
+\[
+e_{ss} = \lim_{t \to \infty} (r(t) - y(t)) = 1 - y_\infty,
+\]
+where $y_\infty = \lim_{t \to \infty} y(t)$ is the steady-state output of the system. A smaller steady-state error indicates better accuracy in tracking the desired output.
+
+An interesting theorem will often be useful in computing steady-state error is the \textbf{Final Value Theorem}. We state the theorem here without proof:
+\begin{theorem}[Final Value Theorem]
+If all poles of $sY(s)$ are in the left half-plane (i.e., the system is stable), then
+\[
+\lim_{t\to\infty} y(t) = \lim_{s\to 0} sY(s).
+\]
+\end{theorem}
+
+This theorem allows us to simply take the limit of $sY(s)$ as $s$ approaches zero (rather than thinking about time going to infinity) to find the steady-state value of the output.
+
+\subsection{Rise time}
+The rise time $t_r$ is the time taken for the system's response to rise from a specified lower percentage to a higher percentage of its final steady-state value. Commonly, the rise time is defined as the time taken for the response to go from 10\% to 90\% of its final value. Note that this is not set in stone --- as engineers, you have the freedom to define a rise time that is more precise. So, you may define rise time as the time it takes for the output to go from 1\% of the steady-state value to 99\% of the steady-state value if that is more relevant for your application (or 5\% to 95\%, etc.). The rise time is a measure of how quickly the system responds to a step input.
+
+Mathematically, we can compute the rise time as follows:
+\[
+t_r : y(t_r^{(10)}) = 0.1\,y_\infty,\;\; y(t_r^{(90)}) = 0.9\,y_\infty,\;\; t_r = t_r^{(90)}-t_r^{(10)}.
+\]
+
+\subsection{Settling time}
+The settling time $t_s$ is the time required for the system's response to remain within a certain percentage (commonly 2\% or 5\%) of its final steady-state value after a disturbance or input change. It indicates how quickly the system stabilizes after a transient response. Mathematically, the settling time is defined as:
+\[
+|y(t)-y_\infty|\le \varepsilon |y_\infty| \quad \forall t\ge t_s,
+\]
+where $\varepsilon$ is the specified tolerance such as 0.02 for 2\% or 0.05 for 5\%. The key part in the definition above is that the condition that $y(t)$ remains within the tolerance band must hold \textbf{for all} $t\ge t_s$. 
+
+\subsection{Maximum overshoot}
+The maximum overshoot $M_p$ is the maximum peak value of the system's response that exceeds the final steady-state value during its transient response to a step input. It is usually expressed as a percentage (or a ratio) of the steady-state value. The maximum overshoot is a measure of how much the system exceeds its desired output before settling down. Note that the overshoot is measured as the overshoot from the final steady-state value. It does not account for the steady-state error natively, so if there is a steady-state error, the overshoot is still measured from the final value that the system settles to. This is why reporting multiple properties of the step response is important to get a complete picture of the behavior of the system. 
+
+Mathematically, the maximum overshoot is defined as:
+\[
+M_p \triangleq \frac{y_{\max}-y_\infty}{y_\infty}\times 100\%,
+\]
+where $y_{\max} = \max_{t\ge 0} y(t)$ is the maximum value of the output during the transient response. 
+\begin{popquiz}
+    How would you find out the point at which $y(t)$ reaches its maximum value?
+    \popqsplit 
+    You can find the maximum value of $y(t)$ by taking the derivative of $y(t)$ with respect to time, setting it to zero, and solving for $t$. This gives you the critical points where the slope of the response is zero (i.e., potential maxima or minima). You can then evaluate $y(t)$ at these critical points to determine which one corresponds to the maximum value.
+\end{popquiz}
+
+\subsection{Peak time}
+The peak time $t_p$ is the time at which the response of the system reaches its maximum value during the transient response to a step input. It indicates how quickly the system reaches its peak output after the input is applied (think about the advertisements of cars that say ``0 to 60 mph in 3.5 seconds'' --- that is essentially the peak time for the speed response of the car to a step input in throttle). Mathematically, the peak time is defined as:
+\[
+t_p \triangleq \arg\max_{t\ge 0} y(t).
+\]
+
+\section{Example: A first-order system}
+Consider a stable first-order LTI system represented in state-space form as:
+\[
+\dot{x} = -a x + u ,\qquad y = c\,x,\qquad a>0.
+\]
+For a unit step input $u(t)=1\cdot u_s(t)$ and initial condition $x(0)=0$, the state and output responses can be computed in multiple ways. Since this is a first-order system, we can directly solve the ODE or use the transfer function approach. Here, we will use the transfer function method (since you've learned the ODE solving methods in Math 024 already!). The transfer function for the system can be derived as follows:
+
+Taking the Laplace transform of the state equation:
+\[
+sX(s) - x(0) = -a X(s) + U(s),
+\]
+where $X(s)$ and $U(s)$ are the Laplace transforms of $x(t)$ and $u(t)$, respectively. Given that $x(0)=0$, we have:
+\[
+(s + a) X(s) = U(s) \implies X(s) = \frac{U(s)}{s + a}.
+\]
+The output in the Laplace domain is given by:
+\[
+Y(s) = c X(s) = \frac{c U(s)}{s + a}.
+\]
+Therefore, the transfer function from input $U(s)$ to output $Y(s)$ is:
+\[
+G(s) = \frac{Y(s)}{U(s)} = \frac{c}{s + a}.
+\]
+For a unit step input, $U(s) = \frac{1}{s}$, the output in the Laplace domain is:
+\[
+Y(s) = G(s) U(s) = \frac{c}{s + a} \cdot \frac{1}{s} = \frac{c}{s(s + a)}.
+\]
+
+To find the time-domain response $y(t)$, we perform the inverse Laplace transform by first taking the partial fraction decomposition:
+\[
+\frac{c}{s(s + a)} = \frac{a_1}{s} + \frac{a_2}{s + a}.
+\]
+We can solve for $a_1$ and $a_2$:
+\[
+c = a_1 (s + a) + a_2 s.
+\]
+Setting $s=0$ gives $c = a_1 a \implies a_1 = \frac{c}{a}$. Setting $s=-a$ gives $c = -a a_2 \implies a_2 = -\frac{c}{a}$. Thus, we have:
+\[
+\frac{c}{s(s + a)} = \frac{c/a}{s} - \frac{c/a}{s + a}.
+\]
+Taking the inverse Laplace transform, we get:
+\[
+y(t) = \frac{c}{a} \left(1 - e^{-at}\right) u_s(t).
+\]
+From this response, we can compute the step response properties:
+\begin{itemize}
+  \item Steady-state value: $y_\infty = \frac{c}{a}$.
+  \item Steady-state error: $e_{ss} = 1 - y_\infty = 1 - \frac{c}{a}$.
+  \item Rise time: $t_r = \frac{\ln(9)}{a} \approx \frac{2.197}{a}$ (from 10\% to 90\%).
+  \item Settling time (2\% criterion): $t_s \approx \frac{4}{a}$.
+  \item Maximum overshoot: $M_p = 0$ (no overshoot for first-order systems).
+  \item Peak time: Not applicable (no peak for first-order systems).
+\end{itemize}
+
+A typical step response for a first-order and a second-order system is shown in Figure~\ref{fig:step_responses}.
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{step_response.png}
+    \caption{Step responses of (a) first-order system and (b) second-order system.}
+    \label{fig:step_responses}
+\end{figure}
+
+
+\section{Impulse response properties}
+Following the development above, we simply state the impulse response properties without going into derivations. For an impulse input $\delta(t)$, the system's response can be analyzed similarly, and the key properties include:
+\begin{itemize}
+  \item Peak magnitude: $\max_{t\ge 0}|y(t)|$.
+  \item Time-to-peak: Time at which the peak magnitude occurs.
+  \item Settling time: Time required for the response to remain within a specified tolerance band around zero.
+\end{itemize}
+
+A typical impulse response for a first-order and a second-order system is shown in Figure~\ref{fig:impulse_responses}.
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{impulse_response.png}
+    \caption{Impulse responses of (a) first-order system and (b) second-order system.}
+    \label{fig:impulse_responses}
+\end{figure}
+
+\section{Next steps}
+In problem set \#3, you will be asked to derive some of these metrics for a second-order system and implement code to compute these metrics for arbitrary systems. In preparation for it, try this problem:
+
+\begin{popquiz}
+    For a second order system in standard transfer function form, can you find out the expression for the settling time with a 2\% criterion in terms of the damping ratio $\zeta$ and natural frequency $\omega_n$?
+    \popqsplit
+    The settling time $t_s$ for a second-order system with a 2\% perturbation band can be approximated using the assumption that the exponential decay term $e^{-\zeta \omega_n t}$ reaches 0.02 (2\% of the final value). Solving for $t_s$ gives:
+    \[
+    t_s \approx \frac{4}{\zeta \omega_n}. 
+    \]
+    To prove that the decay term is $e^{-\zeta \omega_n t}$, you can start from the standard second-order system transfer function:
+    \[
+    G(s) = \frac{\omega_n^2}{s^2 + 2\zeta \omega_n s + \omega_n^2},
+    \]
+    and derive the time-domain response to a step input using inverse Laplace transforms. The exponential decay term arises from the characteristic equation of the system.
+\end{popquiz}
+
+\end{document}
