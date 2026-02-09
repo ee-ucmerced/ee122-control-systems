@@ -17,13 +17,13 @@
 \problem{1}
 Given a second-order dynamical system with transfer function
 \[
-G(s) = \frac{\omega_n^2}{s^2 + 2 \zeta \omega_n s + \omega_n^2}
+G(s) = \frac{Y(s)}{U(s)} = \frac{\omega_n^2}{s^2 + 2 \zeta \omega_n s + \omega_n^2}
 \] 
-where \( \omega_n \) is the natural frequency and \( \zeta \) is the damping ratio (this is pronounced ``zeta"), we can obtain the response of the system to a step input by computing the inverse Laplace transform of \( G(s) \cdot (1/s) \) since the Laplace transform of a unit step input is \( \frac{1}{s} \). Here are the specific steps (your task is to fill in the missing details that are clearly marked in this derivation):
+where \( \omega_n \) is the natural frequency and \( \zeta \) is the damping ratio (this is pronounced ``zeta"), we can obtain the response of the system to a step input by computing the inverse Laplace transform of the transfer function multiplied by \((1/s) \) since the Laplace transform of a unit step input is \( 1/s \). Here are the specific steps (your task is to fill in the missing details that are clearly marked in this derivation):
 
-Start by finding the partial fraction decomposition of \( G(s)/s \):
+Start by finding the partial fraction decomposition of \(Y(s) = G(s) U(s) = G(s)/s \):
 \[
-\frac{G(s)}{s} = \frac{\omega_n^2}{s(s^2 + 2 \zeta \omega_n s + \omega_n^2)} = \frac{a_1}{s} + \frac{a_2 s + a_3}{s^2 + 2 \zeta \omega_n s + \omega_n^2}
+Y(s) = G(s) U(s) = \frac{\omega_n^2}{s(s^2 + 2 \zeta \omega_n s + \omega_n^2)} = \frac{a_1}{s} + \frac{a_2 s + a_3}{s^2 + 2 \zeta \omega_n s + \omega_n^2}
 \]
 
 In partial fraction decomposition, when we have a quadratic term in the denominator, we use a linear expression (i.e., \( a_2 s + a_3 \)) in the numerator for that term.
@@ -61,6 +61,11 @@ which can be separated into two fractions:
     \item Steady-state value
     \item Steady-state error (for a unit step input)
 \end{itemize}
+
+\vspace*{\fill}
+\begin{center}
+[turn to next page]
+\end{center}
 
 \problem{2}
 \textbf{[20 points]} A torsional drivetrain can be modeled as two rotating inertias (motor side and load side) connected by a flexible shaft. This leads to a fourth order transfer function from an applied motor torque (input) to the load-side angular speed (output) given as:
@@ -129,7 +134,7 @@ In Python, you can use the following code:
     plt.show()
 \end{lstlisting}
 
-Include your resulting plot with your submission, along with the parameter values you found that meet the specified criteria. You can automate the computation of the step response metrics to speed up your parameter search --- manual trial-and-error will be very slow. We will expect to see your processs of trial-and-error / automation in your code. Simply using the ``magical numbers'' indicates that you got the parameters without understanding the system behavior.
+Include your code and the resulting plot with your submission, along with the parameter values you found that meet the specified criteria. You can automate the computation of the step response metrics to speed up your parameter search --- manual trial-and-error will be very slow. We will expect to see your processs of trial-and-error / automation in your code. Simply using the ``magical numbers'' indicates that you got the parameters without understanding the system behavior.
 
 Here's an initial set of parameters to get you started (these will likely not meet the criteria):
 \[ 
