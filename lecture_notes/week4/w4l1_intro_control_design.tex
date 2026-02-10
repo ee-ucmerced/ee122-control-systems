@@ -1,0 +1,435 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+
+\renewcommand{\releasedate}{February 9, 2026}
+
+\begin{document}
+
+\section*{EE 122/ME 141 Week 4, Lecture 1 (Spring 2026)}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+
+\subsection*{Announcements}
+\begin{itemize}
+  \item Pset 3 due 2/11
+  \item Lab 3 due this week
+  \item Pset 4 due 2/18
+  \item Midterm 1 on 3/4
+\end{itemize}
+
+\section{Recap}
+We have discussed how to model a system using ODEs, Transfer function (TF), and State space representations. We have also discussed how to quantify the system performance using the step response and the impulse response (recall the metrics: rise time, settling time, overshoot, etc.) All the modeling was a build up to today's class --- designing a controller for the system so that we can achieve a desired performance.
+
+\subsection{Recap: Feedback control}
+We have discussed how we use the concept of feedback to design a controller that generates appropriate control actions that lead the system performance to where we like it to be. A block diagram of a simple feedback control system is shown in Figure~\ref{fig:feedback_control}. The reference input $r(t)$ is the desired value / desired trajectory for the system output, $y(t)$. The controller takes the error signal $e(t)=r(t)-y(t)$ and generates a control action $u(t)$ that is fed into the system. The system then produces an output $y(t)$ that we hope tracks the reference input $r(t)$ well.
+
+\begin{figure}[h]
+  \centering
+  \begin{blockdiagram}
+    \reference{$r(t)$}
+    \controller[Controller]{$e(t)$}{$u(t)$}
+    \system[Plant/System]{}{$y(t)$}
+    \feedback{}{}
+  \end{blockdiagram}
+  \caption{Feedback control: $r(t)$ is the reference input, $u(t)$ is the control action, and $y(t)$ is the output.}
+  \label{fig:feedback_control}
+\end{figure}
+
+\noindent A quick note on the notation:
+\[
+r:\ \text{reference input},\qquad
+u:\ \text{control action (control law chooses }u\text{)},\qquad
+y:\ \text{output}.
+\]
+A confusing piece of notation is the step input. Typically, in signals texts, a step input is referred to as $u(t)$, but in control systems, the letter $u$ is reserved for the control action (see block diagram above). So, to avoid confusion, we will refer to the step input as $u_s(t)$. Formally, we define the step input as
+\[
+u_s(t) = \begin{cases}
+0, & t < 0 \\
+1, & t \geq 0
+\end{cases}
+\]
+which is often useful in defining causal system responses since it turns on at $t=0$. We also use the step response performance as one of the key metrics to evaluate the system performance.
+
+% ============================================================
+\section{Example: A first-order system}
+
+\subsection{System model}
+Consider the first-order system modeled by the following TF:
+\[
+\frac{Y(s)}{U(s)}=\frac{a}{s+p},
+\qquad a,p\in\mathbb{R}.
+\]
+Typically, an RC circuit is modeled by such a TF, where $a$ is the gain and $p$ is related to the time constant of the system. We will see how the parameters $a$ and $p$ affect the system performance in terms of the step response. Another physical system example that can be modeled by a first-order TF is a thermal system where the temperature of an object changes in response to an applied heat input. The parameter $a$ would represent the gain of the system (how much the temperature changes in response to a given heat input), and $p$ would be related to the time constant of the thermal response (how quickly the temperature changes in response to the heat input).
+\begin{popquiz}
+    For a series RC circuit, find out the values of $a$ and $p$ in terms of the resistance $R$ and the capacitance $C$. You can use the following circuit diagram as a reference:
+\begin{center}
+\begin{circuitikz}
+  \draw
+  (0,0) to[short, o-o] (2,0)
+  (2,0) to[R, l=$R$] (2,-2)
+  (2,-2) to[C, l=$C$] (2,-4)
+  (2,-4) to[short, o-o] (0,-4);
+    \node at (0.25,-1.5) {$u(t)$};
+    \node at (3.5,-3) {$y(t)$};
+\end{circuitikz}
+\end{center}
+\popqsplit 
+The TF for a series RC circuit can be derived by applying Kirchhoff's laws. The voltage across the resistor, in Laplace domain, is given by $V_R(s) = R I(s)$, where $I(s)$ is the current through the circuit. The voltage across the capacitor is given by $V_C(s) = \frac{1}{sC} I(s)$. The input voltage $u(t)$ corresponds to the total voltage across both components, so we have:
+\[
+U(s) = V_R(s) + V_C(s) = R I(s) + \frac{1}{sC} I(s) = \left(R + \frac{1}{sC}\right) I(s).
+\]
+The output voltage $y(t)$ is the voltage across the capacitor, so we have:
+\[
+Y(s) = V_C(s) = \frac{1}{sC} I(s).
+\]
+Combining these equations, we can express $Y(s)$ in terms of $U(s)$:
+\[
+Y(s) = \frac{1}{sC} I(s) = \frac{1}{sC} \cdot \frac{U(s)}{R + \frac{1}{sC}} = \frac{1}{sC} \cdot \frac{U(s)}{\frac{sRC + 1}{sC}} = \frac{1}{sC} \cdot \frac{sC U(s)}{sRC + 1} = \frac{U(s)}{sRC + 1}.
+\]
+Thus, the transfer function from $U(s)$ to $Y(s)$ is:
+\[
+\frac{Y(s)}{U(s)} = \frac{1}{sRC + 1}.
+\]
+Comparing this with the general form $\frac{a}{s+p}$, we can identify:
+\[
+a = 1, \qquad p = \frac{1}{RC}.
+\]
+Does that tell you the significance / meaning of the gain term $a$ and the `system pole', $p$, that decides the time constant?
+\end{popquiz}
+
+For a step input, the input to the system will be a step function $u_s(t)$, which has a Laplace transform of $1/s$. Thus, the output in the Laplace domain will be:
+\[
+Y(s)=\frac{a}{s(s+p)}.
+\]
+Directly computing the inverse Laplace transform of $Y(s)$ can be a bit tricky (your Laplace transform tables may not have a direct entry for this), so we can use the method of partial fraction decomposition to break it down into simpler terms that we can easily invert. It is important to learn partial fraction decomposition because the inverse Laplace transforms might not always be computable. So, let us begin with this popquiz.
+\begin{popquiz} 
+How can 
+\[
+Y(s) = \frac{a}{s(s+p)} = \frac{\boxed{}}{\boxed{}} + \frac{\boxed{}}{\boxed{}}
+\]
+What are the four boxes made up of? 
+
+Hint: The idea is to break the left hand side fraction into two fractions: one that has $s$ in the denominator and another that has $s+p$ in the denominator. So, the goal is to find out how to add the two fractions together to get the left hand side back.
+
+\popqsplit
+We define two constants $A$ and $B$ such that
+\[
+\frac{a}{s(s+p)} = \frac{A}{s} + \frac{B}{s+p}.
+\]
+
+Multiply both sides by $s(s+p)$:
+\[
+a = A(s+p) + Bs.
+\]
+Expanding the right hand side and comparing to the left side, we get 
+\[
+a = (A+B)s + Ap.
+\]
+Since the left hand side does not have any $s$ term, we must have $A+B=0$, which implies $B=-A$. Substituting this back into the equation, we get
+\[
+a = Ap \implies A = \frac{a}{p}.
+\]
+Thus, we have
+\[
+\frac{a}{s(s+p)} = \frac{a/p}{s} - \frac{a/p}{s+p}.
+\]
+
+\end{popquiz}
+
+\subsection{Step response}
+Taking the inverse Laplace transform (for $p\neq 0$):
+\[
+y(t)=\frac{a}{p}\left(1-e^{-pt}\right)u_s(t)
+\]
+where $u_s(t)$ is the step function that makes the response causal. The response is shown in Figure~\ref{fig:step_first_order}.
+\begin{popquiz} 
+    Sketch the step response for a positive value of $p$. 
+
+    Hint: Find out what happens to $y(t)$, the system response to step input as obtained above, as $t\to\infty$ and as $t\to 0^+$. This will give you the starting point and the ending point of the step response.
+    \popqsplit 
+    The output converges to
+    \[
+    \lim_{t\to\infty}y(t)=\frac{a}{p}
+    \quad \text{(provided the exponential term decays, which we have because $p>0$).}
+    \]
+    The initial value of the response is
+    \[
+    y(0^+) = 0.
+    \]  
+    Refer to Figure~\ref{fig:step_first_order} for a sketch of the step response.
+\end{popquiz}
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.72\linewidth,
+  height=5.0cm,
+  axis lines=left,
+  xlabel={$t$},
+  ylabel={$y(t)$},
+  xmin=0, xmax=5.0,
+  ymin=0, ymax=1.2,
+  xtick={0,1,2,3,4,5},
+  ytick={0,0.5,1.0},
+]
+% draw dashed horizontal line at y=1
+\draw[dashed, gray] (axis cs:0,1) -- (axis cs:5,1);
+
+\addplot[blue, thick] {1 - exp(-x)};
+\end{axis}
+\end{tikzpicture}
+\caption{Step response of a first-order system with $a=p=1$. The response starts at $0$ and converges to $1$ as $t\to\infty$.}
+\label{fig:step_first_order}
+\end{figure}
+
+
+\subsection{Pole location and stability}
+Remember that we defined the system pole as the values of $s$ that makes the denominator of the transfer function zero, that is, the values of $s$, for which the transfer function is not defined. Today, we will add further meaning to what poles are. Here, one of the poles is at
+\[
+s=-p
+\]
+since the denominator of the TF is $s(s+p)$, which becomes zero at $s=0$ and $s=-p$. 
+Note that if 
+\[
+p>0\ \Longleftrightarrow\ s=-p<0 \ \Longleftrightarrow\ \text{pole is the in left-half plane in the } s\text{-plane} \]
+From the equation for the system response above, we can see that when $p>0$, the step response is bounded. That is, it converges to a finite value $\frac{a}{p}$ as $t\to\infty$ rather than growing without bound. This is because the exponential term $e^{-pt}$ decays to zero as $t\to\infty$ when $p>0$. This is called a ``bounded input bounded output'' (BIBO) stable system. When the reverse is true, that is, if $p<0$, then $-p>0$ (pole in RHP) and the exponential becomes $e^{-pt}=e^{|p|t}$, which grows without bound.
+
+For different values of $p$, the pole locations can be plotted on the complex $s$-plane. Recall that $s$ is a complex number (it comes from the way we defined Laplace transforms). Since it is a complex number, we need a 2D plane to describe it --- the real part on X-axis and the imaginary part on Y-axis, just like we plot usual complex numbers. This also implies that poles can, in general, be complex numbers. 
+
+For the first-order system above, the poles are real numbers (since $p$ is a real number), so they lie on the real axis of the $s$-plane. Figure~\ref{fig:pole-locations} shows the pole locations for different values of $p$. 
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+  \draw[->] (-4.5,0) -- (4.5,0) node[below right]{Real};
+  \draw[->] (0,-2.0) -- (0,2.0) node[above left]{Imag};
+  \node[above right] at (2.6,1.4) {$s$-plane};
+
+  % stable poles (left)
+  \draw[orange, thick] (-3.5,0) node[above] {$-50$} node[below] {} node{} ;
+  \draw[orange, thick] (-2.0,0) node[above] {$-5$} ;
+  \node[orange] at (-3.5,0) {\Large $\times$};
+  \node[orange] at (-2.0,0) {\Large $\times$};
+
+  % unstable poles (right)
+  \node[blue] at (2.0,0) {\Large $\times$};
+  \node[blue] at (3.2,0) {\Large $\times$};
+  \node[blue, above] at (2.0,0) {$+5$};
+  \node[blue, above] at (3.2,0) {$+?\, $};
+
+  % note
+  \node[align=left] at (0.3,-1.4) {\small Pole: $s=-p$ \\ \small Stability: $p>0$};
+\end{tikzpicture}
+\caption{For the system transfer function $\frac{a}{s+p}$, the pole is at $s=-p$. LHP poles ($p>0$) give bounded step responses. In orange, we show the two pole locations corresponding to $p=5$ and $p=50$ (stable). In blue, we show the pole locations corresponding to $p=-5$ and $p=-?$ (unstable).}
+\label{fig:pole-locations}
+\end{figure}
+
+\section{Building an intuition for system poles}
+To build an intuition for how the pole location (which is determined by $p$) affects the system response, let's analyze the step response for different values of $p$. Work on the following popquizzes and spend some time thinking about the answers before jumping to the solutions. 
+\begin{popquiz} For
+\[
+y(t)=\frac{a}{p}\left(1-e^{-pt}\right) u_s(t),
+\]
+predict what happens when:
+
+\begin{enumerate}
+  \item $p=0$
+  \item $p=-5$
+  \item $p=5$
+  \item $p=50$
+\end{enumerate}
+
+\popqsplit
+\begin{enumerate}
+  \item $p=0$: the TF becomes $\frac{a}{s}$, so
+  \[
+  Y(s)=\frac{a}{s}\cdot \frac{1}{s}=\frac{a}{s^2}
+  \quad\Rightarrow\quad
+  y(t)=a t\,\mathbf{1}(t)
+  \]
+  which is an unbounded response. This is also clear if you take the limit of $y(t)$ as $p\to 0$.
+  \item $p=-5$: pole at $s=-p=+5$ (RHP). Exponential term becomes $e^{-pt}=e^{5t}$, so the response grows without bound.
+  \item $p=5$: pole at $s=-5$ (LHP). Decays with time constant $\tau=\frac{1}{p}=\frac{1}{5}$. Converges to $\frac{a}{5}$.
+  \item $p=50$: pole at $s=-50$ (farther left). Much faster decay ($\tau=\frac{1}{50}$). Converges to $\frac{a}{50}$ (smaller final value for the same $a$).
+\end{enumerate}
+\end{popquiz}
+
+\begin{popquiz} What does $a$ do in
+\[
+y(t)=\frac{a}{p}\left(1-e^{-pt}\right) u_s(t)?
+\]
+Consider $a=1$, $a=-1$, $a=100$, $a=-100$.
+
+\popqsplit
+$a$ scales the response (and sets the sign). The final value is $a/p$ (for $p>0$). Negative $a$ flips the output sign. Larger $|a|$ makes the response magnitude larger.
+\end{popquiz}
+
+\subsection{Evaluating faster convergence}
+In this first-order system response above with $p>0$, the convergence rate is controlled by $p$, which determines how quickly the exponential term $e^{-pt}$ decays to zero. The larger the value of $p$, the faster the exponential term decays, leading to a quicker convergence to the steady-state value $\frac{a}{p}$. 
+
+In Figure~\ref{fig:step_sim_first_order}, we show the step response for different values of $p$ (with $a=5$). Read the caption for more!
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{w4l1_step_response_sim.png}
+    \caption{Step response of a first-order system for different values of $p$ (with $a=5$). (left) Plot shows the comparison of the step response for $p=5$ and $p=50$ without normalization (i.e., using the original $y(t)$) which indicates that $p=50$ is perhaps not a preferable response because it ``doesn't go very high'' (final value is $a/p$). (right) Plot shows the comparison of the step response for $p=5$ and $p=50$ with normalization (i.e., using $\tilde y(t)=\frac{y(t)}{y(\infty)}$) which indicates that $p=50$ is actually a much faster response than $p=5$.}
+    \label{fig:step_sim_first_order}
+\end{figure}
+
+Key question: \textbf{Why do we normalize for apples-to-apples comparison?}
+
+To understand this deeply, let us analyze the step response expression carefully. It contains two different effects:
+\begin{enumerate}
+\item \textbf{Steady-state scaling, or the DC gain:} the final value is
+\[
+y(\infty)=\frac{a}{p}.
+\]
+So if $p$ changes, the final value changes even if the ``speed'' dynamics were identical.
+\item \textbf{Time-response shape or the transient response}: This response is decided by the convergence rate:
+\[
+e^{-pt},
+\]
+so larger $p$ gives faster convergence (smaller time constant $\tau=1/p$).
+\end{enumerate}
+
+When looking at the left side plot in Figure~\ref{fig:step_sim_first_order}, you may be confused as to why the $p=50$ response looks ``worse''. But on the right you notice that it is the one that converges quicker. When $p$ is large (e.g.\ $p=50$), the final value $\frac{a}{p}$ is small, so it is true that the curve does not go to high enough values that the $p=5$ system does. But the key idea is that you should not misread this to be a ``slower'' response. That is an absolute magnitude issue, not a rate issue.
+
+To compare time-response properties fairly, we must normalize by the final value (so that we are not unrealistically expecting the $p=50$ response to go as high as the $p=5$ response --- it never reaches there!). So we define the normalized response as
+\[
+\tilde y(t)\;\triangleq\;\frac{y(t)}{y(\infty)}
+=\frac{\frac{a}{p}(1-e^{-pt})}{\frac{a}{p}}
+=1-e^{-pt}.
+\]
+Now the only remaining parameter is $p$, and the comparison is purely about convergence rate:
+\[
+\tilde y(t)=1-e^{-pt}
+\quad\Rightarrow\quad
+\text{larger }p\ \Longrightarrow\ \text{faster rise and faster settling.}
+\]
+
+\subsection*{Practical implications of normalization}
+
+In practice, we usually separate two goals: (1) shaping the transient response, and (2) setting the steady-state gain. The transient response is mainly controlled by the pole location (e.g.\ $p$ in our example), while the steady-state gain can be adjusted independently by setting $a$. So, when we design a controller, we often first focus on shaping the transient response by placing the poles in desirable locations. Then, we can adjust the steady-state gain to achieve the desired final value. 
+
+Shaping the transient response gives us the desired settling time, overshoot, rise time etc. Then, to get back to the desired final value, we can adjust the gain $a$ (or equivalently, the controller gain $K$, as we will see next) to get back to where we want to be in terms of the final value. So normalization is not ``cheating'', in fact, it is the opposite --- it enables fair comparison. We are intentionally factoring out the steady-state gain to compare the transient responses. 
+
+\section{Controlling a first-order system}
+Consider the following first-order system:
+\[
+\frac{Y(s)}{U(s)}=\frac{a}{s+p},
+\qquad a=5,\ p=2
+\quad\Rightarrow\quad
+G(s)=\frac{5}{s+2}.
+\]
+
+\subsection{Goal}
+Our goal is to design a controller so the response is faster (converges more quickly). That is, given a response that looks like the green response in the right graph in Figure~\ref{fig:step_sim_first_order}, we want to design a controller that gives us the orange response (which is faster). The important detail is that we are not allowed to change the plant parameters $a$ and $p$ (we cannot change the system itself), so we must design a controller that interacts with the system to achieve the desired response.
+
+To achieve this, we stary by drawing a block diagram that shows the system and the controller together. The key idea with control design here is to use the feedback from the system to control the error --- the controller will try to generate control actions $u$ that (hopefully) drive the error to 0. In other words, at every time point, you are asking (sensing) the system about its output $y(t)$, then you compare it to the reference input $r(t)$ to get the error $e(t)$, and then you use the controller to generate a control action $u(t)$. The block diagram is shown in Figure~\ref{fig:closed_loop_block_diagram}.
+\subsection{Closed-loop block diagram}
+\begin{figure}[h]
+  \centering
+  \begin{blockdiagram}
+    \reference{$r(t)$}
+    \controller[Controller: C(s)]{$e(t)$}{$u(t)$}
+    \system[$G(s)=\frac{5}{s+2}$]{}{$y(t)$}
+    \feedback{}{}
+  \end{blockdiagram}
+  \caption{Closed-loop control of a first-order system.}
+    \label{fig:closed_loop_block_diagram}
+\end{figure}
+
+We define the error signal
+\[
+e(t)=r(t)-y(t)
+\] 
+which in the Laplace domain is
+\[
+E(s)=R(s)-Y(s).
+\]
+\begin{popquiz}
+    Write down the transfer function $C(s)$ as the ratio of appropriate signals from the block diagram. Similarly, then, think about the overall system response: $y(t)$ in response to reference $r(t)$. So, what is the closed loop transfer function a ratio of?
+    \popqsplit
+From the block diagram, we can see that the controller takes the error signal $e(t)$ and produces the control action $u(t)$. So, the transfer function of the controller can be defined as
+\[
+C(s) = \frac{U(s)}{E(s)}.
+\]
+The overall system response from the reference input $r(t)$ to the output $y(t)$ can be defined as the closed-loop transfer function, which is the ratio of the output $Y(s)$ to the reference input $R(s)$:
+\[
+\text{CLTF} = \frac{Y(s)}{R(s)}.
+\]
+\end{popquiz}
+Define the controller transfer function
+\[
+C(s)=\frac{U(s)}{E(s)}=\frac{U(s)}{R(s)-Y(s)}.
+\]
+From the block diagram:
+\[
+U(s)=C(s)E(s)=C(s)(R(s)-Y(s)),
+\qquad
+Y(s)=G(s)U(s).
+\]
+Substitute $U(s)$ into $Y(s)$:
+\[
+Y(s)=G(s)C(s)(R(s)-Y(s))
+=G(s)C(s)R(s)-G(s)C(s)Y(s).
+\]
+Bring $Y(s)$ terms together:
+\[
+(1+G(s)C(s))Y(s)=G(s)C(s)R(s).
+\]
+Therefore the closed-loop transfer function is
+\[
+\frac{Y(s)}{R(s)}=\frac{G(s)C(s)}{1+G(s)C(s)}.
+\]
+
+
+\begin{popquiz}
+    If $r(t)=u_s(t)$ (a step function), then $R(s)=\frac{1}{s}$. Using
+    \[
+    \frac{Y(s)}{R(s)}=\frac{GC}{1+GC},
+    \]
+    what is the one thing you need to know to predict the shape of $y(t)$ quickly?
+    \popqsplit
+    The closed-loop poles (roots of $1+G(s)C(s)=0$). For first-order cases, the pole location (how far left) directly tells the convergence rate.
+\end{popquiz}
+
+% ============================================================
+\section{The proportional control}
+We propose a simplest controller: a proportional controller that generates a control action that is proportional to the error. The transfer function of the proportional controller is given by $C(s) = K$, where $K$ is a positive real number that represents the proportional gain. The idea is that the controller will generate a control action that is directly proportional to the error signal, which can help drive the system output towards the reference input.
+Now, we compute the closed-loop transfer function with the proportional controller:
+\[
+\frac{Y(s)}{R(s)}=\frac{G(s)C(s)}{1+G(s)C(s)}
+=\frac{\frac{5}{s+2}\,K}{1+\frac{5}{s+2}\,K}
+=\frac{5K}{s+2+5K}.
+\]
+So the closed-loop pole is
+\[
+s=-(2+5K).
+\]
+\textbf{Conclusion:} Increasing $K$ moves the pole farther left, which implies faster response!
+
+\subsection{Closed loop step response}
+For a unit step input $R(s)=\frac{1}{s}$:
+\[
+Y(s)=\frac{5K}{s(s+2+5K)}.
+\]
+So (for $K>0$)
+\[
+y(t)=\frac{5K}{2+5K}\left(1-e^{-(2+5K)t}\right)\mathbf{1}(t).
+\]
+This shows two things at once:
+\begin{itemize}
+  \item \textbf{Speed:} convergence rate increases with $(2+5K)$.
+  \item \textbf{Final value:} the steady-state output is $\frac{5K}{2+5K}<1$ (so there is a nonzero steady-state error for step tracking with proportional-only control).
+\end{itemize}
+\section{Next steps}
+We will look at other control designs that can help us improve the proportional controller's performance.
+% ============================================================
+% End of board transcription draft
+% ============================================================
+
+\end{document}
