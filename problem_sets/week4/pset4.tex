@@ -39,29 +39,35 @@ Your task in this problem is to thoroughly read ONE of the examples above and ap
 [turn to next page]
 \end{center}
 \problem{2}
-The goal of this problem is to design a ``bang-bang'' controller for a thermostat system. A bang-bang controller is a simple on-off controller that applies maximum control effort when the system is below a certain threshold and turns off the control effort when the system is above that threshold. Consider a simple model of a thermostat system where the temperature \( T(t) \) of a room is governed by the following first-order ODE:
+The goal of this problem is to design two controllers for a thermostat system: a ``bang-bang'' controller and a proportional controller for a thermostat system. You already know what the proportional controller is from the lectures. Here is some information about the bang-bang, also called, the on-off control: An on-off controller is a simple controller that applies maximum control effort when the system is below a certain threshold and turns off the control effort when the system is above that threshold. Consider a simple model of a thermostat system where the temperature \( T(t) \) of a room is governed by the following first-order ODE:
 \[
 \frac{dT(t)}{dt} = -\alpha (T(t) - T_{\text{a}}) + \beta u(t)
 \]
-where \( \alpha > 0 \) is the cooling coefficient, \( T_{\text{a}} \) is the ambient temperature, \( \beta > 0 \) is the heating coefficient, and \( u(t) \) is the control input. Your task is to design a bang-bang controller that maintains the room temperature at a desired setpoint \( T_{\text{set}} \). The controller should turn the heater on when the temperature is below \( T_{\text{set}} \) and turn it off when the temperature is above \( T_{\text{set}} \). When you turn the heater on, the control input \( u(t) \) should be set to a maximum value \( u_{\text{max}} \), and when you turn it off, \( u(t) \) should be set to zero.
+where \( \alpha > 0 \) is the cooling coefficient, \( T_{\text{a}} \) is the ambient temperature, \( \beta > 0 \) is the heating coefficient, and \( u(t) \) is the control input. Your task is to design two controllers: a proportional controller and a bang-bang controller that maintains the room temperature at a desired setpoint \( T_{\text{set}} \) --- this is a unit step input. 
+
+With the proportional controller, the control input \( u(t) \) is given by:
+\[
+u(t) = K_p (T_{\text{set}} - T(t))
+\]
+where \( K_p \) is the proportional gain. 
+
+With the on-off controller, The controller should turn the heater on when the temperature is below \( T_{\text{set}} \) and turn it off when the temperature is above \( T_{\text{set}} \). When you turn the heater on, the control input \( u(t) \) should be set to a maximum value \( u_{\text{max}} \), and when you turn it off, \( u(t) \) should be set to zero. That is, 
+\[
+u(t) = \begin{cases}
+u_{\text{max}}, & \text{if } T(t) < T_{\text{set}} \\
+0, & \text{if } T(t) \geq T_{\text{set}}
+\end{cases}
+\]
+
 \problempart \textbf{[5 points]} Draw a block diagram of the closed-loop system with the controller. Label the input, output, and the controller clearly.
-\problempart \textbf{[5 points]} Write down the transfer function of the system without the controller (i.e., the open-loop transfer function from \( u(t) \) to \( T(t) \)), assuming zero initial condition $T(0) = 0$.
-\begin{solution}
-Start by taking the Laplace transform of the ODE:
+
+\problempart \textbf{[5 points]} Prove that the transfer function of the system without the controller (i.e., the open-loop transfer function from \( u(t) \) to \( T(t) \)), assuming zero initial condition $T(0) = 0$ is 
 \[
-s T(s) - T(0) = -\alpha (T(s) - \frac{T_{\text{a}}}{s}) + \beta U(s)
+G(s) = \frac{\beta}{s + \alpha}.
 \]
-Rearranging the equation gives us (for zero initial condition):
-\[
-(s + \alpha) T(s) = \alpha \frac{T_{\text{a}}}{s} + \beta U(s)
-\]
-Thus, the transfer function from \( U(s) \) to \( T(s) \) is:
-\[
-G(s) = \frac{T(s)}{U(s)} = \frac{\beta}{s + \alpha}
-\]
-\end{solution} 
-\problempart \textbf{[15 points]} Derive the expression for the control input \( u(t) \) as a function of the temperature \( T(t) \) and the setpoint \( T_{\text{set}} \). Is this controller linear or nonlinear? 
-\problempart \textbf{[20 points]} Simulate the closed-loop system with your bang-bang controller for a given set of parameters \( \alpha, \beta, T_{\text{a}}, T_{\text{set}} \) and initial temperature \( T(0) \). Plot the temperature response \( T(t) \) over time and discuss the behavior of the system under your controller. You may use MATLAB or Python for the simulation. You must include your code and the resulting plot with your submission.
-\problempart \textbf{[5 points]} Discuss the advantages and disadvantages of using your controller. Propose another controller that could potentially improve the performance of the system and briefly describe how it would work (no need to simulate the new controller, just describe it).
+\problempart \textbf{[10 points]} For the proportional controller, derive the closed-loop transfer function from the setpoint \( T_{\text{set}} \) to the temperature \( T(t) \).
+\problempart \textbf{[5 points]} Is the on-off controller linear or nonlinear? 
+\problempart \textbf{[20 points]} Simulate the closed-loop system with both controllers: proportional and the on-off controller for a given set of parameters \( \alpha, \beta, T_{\text{a}}, T_{\text{set}} \) and initial temperature \( T(0) \). Plot the temperature response \( T(t) \) over time and discuss the behavior of the system under your controller. You may use MATLAB or Python for the simulation. You must include your code and the resulting plot with your submission.
+\problempart \textbf{[5 points]} Discuss the advantages and disadvantages of using each controller. Based on your research, find out if real-world thermostats use proportional control or on-off control?
 
 \end{document}

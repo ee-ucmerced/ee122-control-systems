@@ -1,0 +1,314 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\usepackage{geometry}
+\renewcommand{\releasedate}{February 11, 2026}
+
+% ---- global knobs (change these once) ----
+\newcommand{\SPlaneW}{4.4cm}   % width of s-plane box
+\newcommand{\SPlaneH}{4.4cm}   % height of s-plane box
+\newcommand{\StepW}{8.2cm}     % width of step-response box
+\newcommand{\StepH}{4.4cm}     % height of step-response box
+
+% ---- s-plane axes: empty coordinate box for students to mark poles ----
+\newcommand{\SPlaneAxis}[1][]{%
+\begin{tikzpicture}[baseline, x=1cm, y=1cm]
+  % bounding box (so layout never overlaps)
+  \path[use as bounding box] (0,0) rectangle (\SPlaneW,\SPlaneH);
+
+  % coordinate mapping inside the box
+  \begin{scope}[shift={(0.35cm,0.35cm)}]
+    \def\W{\dimexpr\SPlaneW-0.7cm\relax}
+    \def\H{\dimexpr\SPlaneH-0.7cm\relax}
+
+    % axes centered
+    \draw[->, line width=0.8pt] (0.0,0.5*\H) -- (\W,0.5*\H) node[below right]{\small Re};
+    \draw[->, line width=0.8pt] (0.5*\W,0.0) -- (0.5*\W,\H) node[above left]{\small Im};
+
+    % ticks (light)
+    \foreach \k in {1,2,3,4} {
+      \draw[line width=0.5pt] (\k*\W/5,0.5*\H+0.08) -- (\k*\W/5,0.5*\H-0.08);
+      \draw[line width=0.5pt] (0.5*\W+0.08,\k*\H/5) -- (0.5*\W-0.08,\k*\H/5);
+    }
+
+    % origin label + hint
+    \node[below left] at (0.5*\W,0.5*\H) {\small $0$};
+    \node[gray] at (0.78*\W,0.82*\H) {\scriptsize (mark poles $\times$)};
+  \end{scope}
+
+  % optional per-axis annotation
+  \ifx\relax#1\relax\else
+    \node[anchor=north west] at (0.05cm,\SPlaneH) {\scriptsize #1};
+  \fi
+\end{tikzpicture}%
+}
+
+% ---- step-response axes: empty time plot for students to sketch ----
+\newcommand{\StepAxis}[1][]{%
+\begin{tikzpicture}[baseline, x=1cm, y=1cm]
+  % bounding box
+  \path[use as bounding box] (0,0) rectangle (\StepW,\StepH);
+
+  \begin{scope}[shift={(0.45cm,0.35cm)}]
+    \def\W{\dimexpr\StepW-0.9cm\relax}
+    \def\H{\dimexpr\StepH-0.7cm\relax}
+
+    % axes (origin at lower-left of inner scope)
+    \draw[->, line width=0.8pt] (0,0) -- (\W,0) node[below right]{\small $t$};
+    \draw[->, line width=0.8pt] (0,0) -- (0,\H) node[above left]{\small $y(t)$};
+
+    % ticks (light)
+    \foreach \k in {1,2,3,4,5} {
+      \draw[line width=0.5pt] (\k*\W/6,0.08) -- (\k*\W/6,-0.08);
+    }
+    \foreach \k in {1,2,3} {
+      \draw[line width=0.5pt] (0.08,\k*\H/4) -- (-0.08,\k*\H/4);
+    }
+
+    % optional final-value guideline
+    \draw[dashed, gray] (0,0.75*\H) -- (\W,0.75*\H);
+    \node[gray, anchor=west] at (0.03*\W,0.75*\H) {\scriptsize (final value?)};
+    \node[gray] at (0.72*\W,0.52*\H) {\scriptsize (sketch response)};
+  \end{scope}
+
+  % optional per-axis annotation
+  \ifx\relax#1\relax\else
+    \node[anchor=north west] at (0.05cm,\StepH) {\scriptsize #1};
+  \fi
+\end{tikzpicture}%
+}
+
+% ---- one panel macro: title + two axes + behavior lines ----
+\newcommand{\PoleStepPanel}[1]{%
+\begin{minipage}[t]{0.49\linewidth}
+  \textbf{#1}\par\vspace{0.4em}
+  \noindent
+  \begin{minipage}[t]{0.44\linewidth}
+    \centering \textbf{$s$-plane}\par\vspace{-0.2em}
+    \SPlaneAxis
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.54\linewidth}
+    \centering \textbf{Unit-step response}\par\vspace{-0.2em}
+    \StepAxis
+  \end{minipage}
+
+  \vspace{0.45em}
+  \noindent\textbf{Estimates:}\quad
+  $e_{ss}=$\rule{2.3cm}{0.4pt}\quad
+  PO$=$\rule{1.8cm}{0.4pt}\quad
+  $t_r=$\rule{1.8cm}{0.4pt}
+
+  \vspace{0.35em}
+  \noindent\textbf{Behavior:}\par
+\end{minipage}%
+}
+
+\begin{document}
+
+\section*{EE 122/ME 141 Week 4, Lecture 2: Proportional Control}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+
+% ------------------------------------------------------------
+% Step response + pole locations for 2nd-order systems
+% (paste into your ee102_notes template)
+% ------------------------------------------------------------
+\section{Announcements}
+\begin{itemize}
+    \item Problem set 4 is out, due on Feb 18.
+    \item In Lab 3, you are designing a controller to accurately control the position of a cart.
+    \item Feedback on EE 122 so far. Access: \texttt{closedloop}.
+    \item Midterm on Mar 04 (Wednesday). Exam duration: 90 minutes. Will cover all material from Week 1 to Week 6.
+\end{itemize}
+
+\section{Recap: Control of first-order systems}
+Last time, we talked about how proportional control can be used to improve the step response of a first-order system. Let us revisit the example and the key ideas that we discussed.
+\subsection{First-order system}
+A typical first-order system has the transfer function
+\[
+G(s)=\frac{a}{s + p}
+\]
+where $a$ is the DC gain and $p$ is the pole. Here, the system has input $u(t)$ and output $y(t)$, and transfer function is the ratio of the Laplace transforms of output and input:
+\[ 
+G(s)=\frac{Y(s)}{U(s)}.
+\]
+
+A physical example of a first-order system is a DC motor, where the input is the voltage applied to the motor and the output is the angular velocity of the motor shaft. The pole $p$ determines how quickly the system responds to changes in the input, while the DC gain $a$ determines the steady-state output for a given input. We see this mathematically by solving for the step response. For a unit step input $u(t)=1, t\geq 0$, we have $U(s)=\frac{1}{s}$, so
+\[
+Y(s)=G(s)U(s)=\frac{a}{s(s+p)}.
+\]
+Using partial fraction expansion and taking the inverse Laplace transform, we find
+\[
+y(t)=\frac{a}{p}\left(1-e^{-pt}\right).
+\]
+The key takeaway is that the pole $p$ determines the speed of the response, that is, how quickly the system reaches its steady-state value $\frac{a}{p}$.
+
+On the s-plane, we can plot the pole at $s=-p$ (on the real axis). The further left the pole is, the faster the response. For a given system, assume that the pole location is $p = 5$, we have the pole at $s=-5$. Since the plant is fixed, what can we do to improve the speed of the response? We can use proportional control. For the closed-loop system, we derived that the closed-loop transfer function is
+\[
+T(s)=\frac{C(s)G(s)}{1+C(s)G(s)} = \frac{K_p a}{s + p + K_p a}.
+\]
+Clearly, the new pole location is $p + K_p a$. By increasing $K_p$, we can move the pole further left, which leads to a faster response. However, there is a limit to how much we can increase $K_p$ before we encounter issues such as actuator saturation or noise amplification. The DC motor example is a good illustration of this: if we apply too much voltage, we may damage the motor or cause it to behave erratically due to noise.
+
+Let's extend this to second-order systems.
+
+\section{Performance of second-order systems}
+
+Before we think about the control of second-order systems, we first need to set up the problem --- given a set of parameters for a second-order system, what can we do to improve its rise time, reduce overshoot, and reduce steady-state error (or similarly optimize other metrics)? To answer this question, we need to understand how the parameters of a second-order system affect its step response.
+
+We will use the standard second-order transfer function
+\[
+G(s)=\frac{\omega_n^2}{s^2+2\zeta\omega_n s+\omega_n^2}.
+\]
+For a unit step input $u(t)=u_s(t)$ we have $U(s)=\frac{1}{s}$, so
+\[
+Y(s)=G(s)U(s)=\frac{\omega_n^2}{s\left(s^2+2\zeta\omega_n s+\omega_n^2\right)}.
+\]
+
+\subsection{Pole locations}
+The roots of $s^2+2\zeta\omega_n s+\omega_n^2$ are the system poles that generate the transient response. To find the poles, we find the roots of the quadratic equation:
+\[
+s_{1,2}=-\zeta\omega_n \pm \omega_n\sqrt{\zeta^2-1}.
+\]
+When $\zeta<1$, it is convenient to define the damped frequency
+\[
+\omega_d = \omega_n\sqrt{1-\zeta^2},
+\]
+so that
+\[
+s_{1,2}=-\zeta\omega_n \pm j\omega_d \qquad (\zeta<1).
+\]
+We re-write the poles as complex numbers since $\zeta$ is the damping ratio, which is usually less than $1$ for many systems of interest.
+
+This is a good point for you to start exploring the in-class activity (see the last page of the lecture notes). 
+
+We learn from the activity that a pole at
+\[
+s=\sigma + j\omega
+\]
+contributes time-domain terms of the form
+\[
+e^{\sigma t}\cos(\omega t),\quad e^{\sigma t}\sin(\omega t)
+\]
+and so the $\omega=|\Im(s)|$ sets the oscillation frequency and more the imaginary part, we see higher frequency oscillations. On the other hand, $\sigma=\Re(s)$ sets the decay rate, we see that the more negative real part leads to faster exponential decay.
+\subsection{Zero damping}
+
+When we have $\zeta=0$, the poles are purely imaginary:
+\[
+s=\pm j\omega_n,
+\]
+which leads to a step response given by 
+\[
+Y(s)=\frac{\omega_n^2}{s(s^2+\omega_n^2)}.
+\]
+We expand this using partial fractions and then take the inverse Laplace transform:
+\[
+\frac{\omega_n^2}{s(s^2+\omega_n^2)}=\frac{1}{s}-\frac{s}{s^2+\omega_n^2}.
+\]
+\[
+y(t)=1-\cos(\omega_n t).
+\]
+This is clearly an oscillatory response that does not decay! 
+\begin{popquiz}
+For $\zeta=0$, would you call the system stable? Why or why not?
+\popqsplit 
+The system is indeed bounded input bounded output (BIBO) stable, since the step response is bounded for all time. However, it is not asymptotically stable, since the response does not decay to a steady-state value but instead oscillates indefinitely. When we formally define stability of systems, we will call this type of system \emph{marginally stable}.
+\end{popquiz}
+
+We note that for this case, the $\frac{1}{s}$ term produces the constant baseline $1$ and the imaginary-axis poles produce a sinusoid (cosine) with no decay since there was no negative real part. 
+
+\subsection{Underdamped response}
+When $0<\zeta<1$, the poles are complex conjugates with negative real part:
+\[
+s=-\zeta\omega_n \pm j\omega_d, \qquad \omega_d=\omega_n\sqrt{1-\zeta^2}.
+\]
+Your task in Problem Set \#3 is to find out the closed-form expression for the step response in this case. The key takeaway is that the response is an exponentially decaying sinusoid.
+
+\subsection{Critical damping}
+When $\zeta=1$, we call it critical damping. The poles are repeated real negative poles:
+\[
+s=-\omega_n 
+\]
+For this case, the step response is
+\[
+Y(s)=\frac{\omega_n^2}{s(s+\omega_n)^2}
+\]
+using partial fraction expansion and taking inverse Laplace transform
+\[
+y(t)=1-e^{-\omega_n t}\left(1+\omega_n t\right).
+\]
+
+Since there is no imaginary part here, we will not observe any oscillations. The repeated pole creates a $t e^{-\omega_n t}$-type which gives a fast rise without overshoot. This is the difference in this system response compared to the first-order system response, which is $1-e^{-\omega_n t}$.
+
+\subsection{Control: Changing pole locations}
+We consider a unity-feedback loop with plant $G(s)$ and proportional controller $C(s) = K_p$. We have the closed-loop transfer function
+\[
+T(s)=\frac{Y(s)}{R(s)}=\frac{K_p G(s)}{1+K_p G(s)}.
+\]
+The closed-loop poles are the roots of the characteristic equation
+\[
+1+K_p G(s)=0.
+\]
+So changing $K_p$ changes the characteristic equation which in turn, changes the pole locations and the system response. 
+
+\begin{popquiz}
+  For the case of underdamped system, what would happen if we increase $K_p$?
+\popqsplit
+Increasing $K_p$ will lead to faster response. Can you prove this?
+\end{popquiz}
+
+\newpage 
+
+% ============================================================
+% Active Learning Worksheet: Poles on the s-plane and Step Response
+% (No preamble; paste into your notes/worksheet template.)
+% ============================================================
+\begin{landscape}
+% set page geometry to set margin of 0.25inch, not in preamble, this is in document:
+
+
+\tiny
+% \begin{center}
+% {\Large \textbf{Active Learning Worksheet: Pole Locations $\leftrightarrow$ Step Response Behavior}}
+% \end{center}
+
+% \vspace{0.35em}
+
+% \noindent
+% \textbf{Goal:} For each case below, (i) plot the poles on the $s$-plane, (ii) sketch the unit-step response, and (iii) estimate: steady-state error $e_{ss}$, percent overshoot (PO), and rise time $t_r$.
+
+% \vspace{0.6em}
+
+\noindent
+\textbf{Standard 2nd-order form:}\hfill
+\[
+G(s)=\frac{\omega_n^2}{s^2+2\zeta\omega_n s+\omega_n^2},
+\qquad
+s_{1,2}=-\zeta\omega_n \pm \omega_n\sqrt{\zeta^2-1}.
+\]
+
+\vspace{0.35em}
+
+% ---- panels (2x2) ----
+\noindent
+\PoleStepPanel{$\boldsymbol{\zeta=0}$}
+\hfill
+\PoleStepPanel{ $\boldsymbol{\zeta=1}$}
+
+\vspace{0.9em}
+
+\noindent
+\PoleStepPanel{$\boldsymbol{0<\zeta<1}$}
+\hfill
+\PoleStepPanel{$\boldsymbol{\omega_n=0}$}
+
+% \vspace{0.8em}
+
+% \noindent
+% \textbf{Wrap-up (one sentence):} As poles move (left/right, real/complex), how do $e_{ss}$, PO, and $t_r$ change?\\
+\rule{\linewidth}{0.4pt}
+
+\end{landscape}
+\end{document}

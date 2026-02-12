@@ -1,0 +1,155 @@
+
+\subsection{What proportional control is good for (and limits)}
+\begin{itemize}
+\item Increasing $K_p$ typically increases loop gain, which can move closed-loop poles left (faster decay) \emph{or} can reduce damping (more overshoot), depending on plant structure.
+\item For step tracking in unity feedback, proportional control reduces steady-state error for type-0 plants, but does not generally eliminate it:
+\[
+e_{ss}=\lim_{t\to\infty}e(t)=\lim_{s\to 0} sE(s)=\frac{1}{1+K_p G(0)}.
+\]
+\end{itemize}
+
+\subsection{General second-order example with $K_p$}
+
+Let the plant be
+\[
+G(s)=\frac{b_0}{s^2+a_1 s + a_0},
+\]
+with unity feedback and proportional control $K_p$.
+Then
+\[
+T(s)=\frac{K_p b_0}{s^2+a_1 s + a_0 + K_p b_0}.
+\]
+So the closed-loop characteristic equation is
+\[
+s^2+a_1 s + (a_0+K_p b_0)=0.
+\]
+Match to the standard form $s^2+2\zeta\omega_n s + \omega_n^2$:
+\[
+2\zeta\omega_n = a_1,
+\qquad
+\omega_n^2 = a_0+K_p b_0,
+\qquad
+\Rightarrow\quad
+\zeta=\frac{a_1}{2\sqrt{a_0+K_p b_0}}.
+\]
+\paragraph{Takeaway (important trade-off in this structure).}
+Increasing $K_p$ increases $\omega_n$ (often faster), but \emph{decreases} $\zeta$ here:
+\[
+\omega_n\uparrow \ \Rightarrow\  \zeta=\frac{a_1}{2\omega_n}\downarrow,
+\]
+so the response can become faster yet more underdamped (more overshoot) as $K_p$ increases.
+
+\paragraph{Steady-state error to a step.}
+For unity feedback,
+\[
+e_{ss}=\frac{1}{1+K_p G(0)}
+=\frac{1}{1+K_p\left(\frac{b_0}{a_0}\right)}.
+\]
+
+% ------------------------------------------------------------
+% Numerical examples
+% ------------------------------------------------------------
+
+\section{Numerical examples (proportional control on a second-order plant)}
+
+\subsection{Example A: Overdamped plant with high $e_{ss}$ (type-0, low DC gain)}
+
+Choose
+\[
+G(s)=\frac{0.1}{s^2+20s+1}.
+\]
+\paragraph{Open-loop poles (plant poles).}
+Solve $s^2+20s+1=0$:
+\[
+s_{1,2}\approx -19.9499,\ -0.0501
+\]
+(two real negative poles $\Rightarrow$ overdamped, with a very slow dominant pole at $-0.0501$).
+
+\paragraph{Steady-state error with proportional control.}
+Here $G(0)=\frac{0.1}{1}=0.1$, so
+\[
+e_{ss}=\frac{1}{1+0.1K_p}.
+\]
+If $K_p=1$:
+\[
+e_{ss}=\frac{1}{1+0.1}=0.909\quad (\text{very large}).
+\]
+
+\paragraph{Closed-loop transfer function and poles.}
+With unity feedback:
+\[
+T(s)=\frac{0.1K_p}{s^2+20s+(1+0.1K_p)}.
+\]
+Closed-loop poles are the roots of
+\[
+s^2+20s+(1+0.1K_p)=0.
+\]
+
+\paragraph{Two $K_p$ values (show the pole movement).}
+\begin{itemize}
+\item If $K_p=1$, characteristic equation is $s^2+20s+1.1=0$:
+\[
+s_{1,2}\approx -19.9448,\ -0.0552
+\]
+(still overdamped; dominant pole slightly faster than $-0.0501$).
+\item If $K_p=50$, characteristic equation is $s^2+20s+6=0$:
+\[
+s_{1,2}\approx -19.6954,\ -0.3046
+\]
+(still overdamped; dominant pole moves left a lot $\Rightarrow$ much faster settling).
+\end{itemize}
+
+\paragraph{Corresponding steady-state errors.}
+\[
+K_p=1:\ e_{ss}=0.909,
+\qquad
+K_p=50:\ e_{ss}=\frac{1}{1+5}=0.166.
+\]
+\paragraph{Lesson.}
+This example cleanly shows: increasing $K_p$ can (i) reduce $e_{ss}$ (by increasing low-frequency loop gain) and (ii) move the dominant pole left (faster response), while remaining overdamped over a wide range of $K_p$.
+
+\subsection{Example B: Initially well-damped plant where larger $K_p$ speeds up but reduces damping (more overshoot)}
+
+Choose
+\[
+G(s)=\frac{1}{s^2+2s+1}=\frac{1}{(s+1)^2}.
+\]
+\paragraph{Open-loop poles.}
+\[
+s=-1\ \text{(double pole)} \quad \Rightarrow\quad \text{critically damped plant dynamics.}
+\]
+\paragraph{Closed-loop with proportional control.}
+\[
+T(s)=\frac{K_p}{s^2+2s+(1+K_p)}.
+\]
+Match $s^2+2\zeta\omega_n s + \omega_n^2$:
+\[
+2\zeta\omega_n=2,\qquad \omega_n^2=1+K_p
+\quad\Rightarrow\quad
+\omega_n=\sqrt{1+K_p},\ \ \zeta=\frac{1}{\sqrt{1+K_p}}.
+\]
+So $K_p\uparrow$ makes $\omega_n\uparrow$ (faster), but $\zeta\downarrow$ (less damped).
+
+\paragraph{Pick two $K_p$ values.}
+\begin{itemize}
+\item If $K_p=0$, then $\omega_n=1$ and $\zeta=1$ (critically damped).
+\item If $K_p=8$, then $\omega_n=\sqrt{9}=3$ and $\zeta=\frac{1}{3}$ (underdamped).
+\end{itemize}
+Poles for $K_p=8$:
+\[
+s=-\zeta\omega_n \pm j\omega_n\sqrt{1-\zeta^2}
+= -1 \pm j\sqrt{8}.
+\]
+\paragraph{Steady-state error.}
+Here $G(0)=1$, so
+\[
+e_{ss}=\frac{1}{1+K_p}.
+\]
+For $K_p=8$, $e_{ss}=\frac{1}{9}\approx 0.111$.
+
+\paragraph{Lesson.}
+This example cleanly shows the common trade-off in proportional control for some second-order plants:
+\[
+K_p\uparrow \Rightarrow \omega_n\uparrow\ (\text{faster}),\quad \zeta\downarrow\ (\text{more overshoot/oscillation}),
+\]
+while $e_{ss}$ improves because $G(0)$ is large and proportional gain increases low-frequency loop gain.
