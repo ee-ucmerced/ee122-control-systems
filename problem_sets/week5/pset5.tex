@@ -19,7 +19,7 @@ For the thermostat system from Problem Set 4, implement a PID controller and ans
 \problempart \textbf{[5 points]} Draw a block diagram showing all three components of the PID controller (proportional, integral, and derivative) and how they connect to form the controller, which then connects to the plant (the system being controlled). Label all signals and components clearly.
 \problempart \textbf{[20 points]} Write down the transfer function of the PID controller and the closed-loop transfer function of the system with the PID controller.
 
-Follow the following experimental setup for the next few parts:
+Follow the following experimental setup for the next part:
 
 You are fiddling with the desired temperature in the room to test how quick the thermostat responds. To simulate this behavior, create an array of desired temperatures that each last for 10 minutes and then change to the next desired temperature. For example, you could start with $\SI{20}{\degree C}$ for 10 minutes, then change to $\SI{25}{\degree C}$ for the next 10 minutes, and so on. For a total of 60 minutes, simulate the system with the PID controller and plot the actual temperature of the room over time. Assume that the initial temperature of the room is $\SI{18}{\degree C}$ and that the ambient temperature remains contant at $\SI{15}{\degree C}$ throughout the simulation. 
 
