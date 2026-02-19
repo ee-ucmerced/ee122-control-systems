@@ -1,0 +1,334 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\usepackage{geometry}
+\renewcommand{\releasedate}{February 18, 2026}
+
+\begin{document}
+
+\section*{EE 122/ME 141 Week 5, Lecture 1: Proportional Integral Derivative Control}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set 4 is due 2/18, problem set 5 is due 2/25.
+    \item Problem set 6 will be practice midterm exam. Will be released on 2/25 and due on 3/4.
+    \item In Lab 4, you are designing a PID controller to accurately control the position of a cart.
+    \item In Lab 5, you will work on controlling an inverted pendulum. No lab during week 7.
+    \item Midterm on Mar 04 (Wednesday). Exam duration: 90 minutes. Will cover all material from Week 1 to Week 6.
+\end{itemize}
+
+\section{Reading (and recap so far)}
+We started the course with motivation for control systems and common examples (Chapter 1 and 2 in FBS). Then, we talked about modeling of dynamical systems using ordinary differential equations (ODEs), state-space representation, and transfer functions (Chapter 3 in FBS) --- week 3 of our course. Starting with week 4, we jumped around a bit in the textbook to discuss simple controllers so that we can relate the topics of this course to real-world applications. We started with proportional control and effect of control action on the response of the system. Specifically, we looked at how controllers can be used to change the location of the poles of the system and how that affects the response (week 4 in this course). This week, we will expand the simple controller (proportional only) to other advanced controllers.
+
+To see if you can recall the content of the course so far, here is a pop quiz. 
+\begin{popquiz}
+Draw a block diagram of a unity feedback control system with a proportional controller. Label the input, output, error signal, and the controller block. Then, write down the transfer function of the closed-loop system in terms of the plant transfer function $P(s)$ and the proportional gain $k_p$.
+\popqsplit
+The block diagram is shown below:
+
+\begin{center}
+  \begin{blockdiagram}
+    \reference{$r(t)$}
+    \controller[$k_p$]{$e(t)$}{$u(t)$}
+    \system[$P(s)$]{}{$y(t)$}
+    \feedback{-1}{}
+  \end{blockdiagram}
+  
+\end{center}
+
+The closed-loop transfer function can be obtained by writing down the block diagram algebra:
+\begin{align*}
+    Y(s) &= P(s)U(s) \\
+    U(s) &= k_p E(s) \\
+    E(s) &= R(s) - Y(s)
+\end{align*}
+Substituting $E(s)$ into $U(s)$ and then substituting $U(s)$ into $Y(s)$, we get
+\begin{align*}
+    Y(s) &= P(s) k_p (R(s) - Y(s)) \\
+    Y(s) + P(s) k_p Y(s) &= P(s) k_p R(s) \\
+    Y(s)(1 + P(s) k_p) &= P(s) k_p R(s)
+\end{align*}
+Thus, the closed-loop transfer function is
+\[
+    \frac{Y(s)}{R(s)} = \frac{P(s) k_p}{1 + P(s) k_p}
+\]
+\end{popquiz}
+The key question is: why is proportional control not enough? 
+\section{Learning Goals}
+\begin{itemize}
+    \item Understand the limitations of proportional-only controllers.
+    \item Design and analyze proportional-integral-derivative (PID) controllers.
+    \item Compare the effects of the proportional, integral, and derivative components on the system response.
+\end{itemize}
+
+\section{Steady state error}
+Recall the final value theorem. For any signal $x(t)$, we can find out the value of the signal as $t \to \infty$ by looking at the Laplace transform of the signal:
+\[
+    \lim_{t \to \infty} x(t) = \lim_{s \to 0} s X(s)
+\]
+Now, let's apply the final value theorem to the error signal $e(t)$ in the feedback control system to find out the steady-state error. Try the following pop-quiz to attempt this for yourself:
+\begin{popquiz}
+    Find the steady-state error of the system with P-only controller when the reference input is a unit step function (i.e., $r(t) = u(t)$, which implies $R(s) = \frac{1}{s}$). Start from the closed-loop transfer function and find the error signal in the Laplace domain. Then, apply the final value theorem to find the steady-state error.
+\popqsplit
+The error signal in the Laplace domain can be found by writing down the block diagram algebra:
+\begin{align*}
+    E(s) &= R(s) - Y(s) \\
+    &= R(s) - \frac{P(s) k_p}{1 + P(s) k_p} R(s) \\
+    &= R(s) \left(1 - \frac{P(s) k_p}{1 + P(s) k_p}\right) \\
+    &= R(s) \left(\frac{1 + P(s) k_p - P(s) k_p}{1 + P(s) k_p}\right) \\
+    &= \frac{R(s)}{1 + P(s) k_p}
+\end{align*}
+Now, we can apply the final value theorem to find the steady-state error:
+\begin{align*}
+    e_{ss} &= \lim_{t \to \infty} e(t) \\
+    &= \lim_{s \to 0} s E(s) \\
+    &= \lim_{s \to 0} s \frac{R(s)}{1 + P(s) k_p} \\
+    &= \lim_{s \to 0} s \frac{\frac{1}{s}}{1 + P(s) k_p} \\
+    &= \lim_{s \to 0} \frac{1}{1 + P(s) k_p}
+\end{align*}
+Thus, the steady-state error is
+\[
+    e_{ss} = \frac{1}{1 + P(0) k_p}
+\]
+\end{popquiz}
+From the previous pop-quiz, we obtain that the steady state error with a P-only controller is 
+\begin{equation*}
+    e_{ss} = \frac{1}{1 + P(0) k_p}
+\end{equation*}
+where $P(0)$ is the DC gain of the plant (or the value of the plant system at zero frequency).
+
+\begin{popquiz}
+    With a P-only controller, is it possible to ever reach zero steady-state error? 
+\popqsplit
+From the expression for the steady-state error, we can see that as $k_p \to \infty$, $e_{ss} \to 0$. But this is not practically possible. So, non-zero error is one of the main limitations of proportional control.
+\end{popquiz}
+Clearly, we cannot achieve zero error when using a P-only controller. This motivates the need for other types of controllers that can help us achieve zero steady-state error. 
+
+\section{Advanced controllers for zero error}
+Since the P-only controller leaves out an error at the end, one idea is to design a new controller that offsets this error at steady-state. A direct approach is to add a term that uses the DC gain. That is, we propose the following controller:
+\[
+    u(t) = k_p e(t) + \frac{r(t)}{P(0)}
+\]  
+where the second term is designed to offset the steady-state error. This is a feedforward term! How? To see this, we draw the updated block diagram. In this updated diagram, we will see that a feedforward signal directly from the reference, multiplied by $\frac{1}{P(0)}$, is added to the control action. (If you are confused by how this came about: take it as ``magical'' choice, you will see that it will lead to zero error). The block diagram is shown in Figure~\ref{fig:feedforward_control}.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    >=Latex,
+    node distance=1.8cm,
+    block/.style={draw, rectangle, minimum height=1.0cm, minimum width=2.2cm},
+    sum/.style={draw, circle, inner sep=0pt, minimum size=6.5mm},
+]
+% ---- nodes ----
+\node (r) {$r$};
+\node[sum, right=1.6cm of r] (sumE) {};
+\node[block, right=1.6cm of sumE] (C) {$k_p$};
+\node[sum, right=1.8cm of C] (sumU) {};
+\node[block, right=1.6cm of sumU] (P) {$P(s)$};
+\node[right=1.6cm of P] (y) {$y$};
+
+\node[block, above=1.2cm of sumU, minimum width=2.1cm] (FF) {$\dfrac{1}{P(0)}$};
+
+% ---- main forward path (also creates tap points) ----
+\draw[->] (r) -- node[midway] (rTap) {} (sumE);
+\draw[->] (sumE) -- node[midway, above] {$e$} (C);
+\draw[->] (C) -- node[midway, above] {$u_c$} (sumU);
+\draw[->] (sumU) -- node[midway, below] {$u$} (P);
+\draw[->] (P) -- node[midway] (yTap) {} (y);
+
+% ---- feedforward path: from midpoint of r->sumE up to FF, then down into sumU ----
+\draw[->] (rTap.center) |- (FF.west);
+\draw[->] (FF.south) -| (sumU.north);
+
+% ---- feedback path: from midpoint of plant output back to negative input of sumE ----
+\draw[->] (yTap.center) |- ++(0,-1.5cm) -| (sumE.south);
+
+% ---- sum signs ----
+\node at ($(sumE.center)+(-0.10,0.16)$) {\scriptsize $+$};
+\node at ($(sumE.center)+(-0.10,-0.16)$) {\scriptsize $-$};
+
+\node at ($(sumU.center)+(-0.18,0)$) {\scriptsize $+$};
+
+\end{tikzpicture}
+\caption{Unity-feedback control with an added feedforward term. The reference is sent through a gain $\frac{1}{P(0)}$ and summed with the controller output to form the plant input.}
+\label{fig:feedforward_control}
+\end{figure}
+
+
+Let's find out the steady-state error for this controller (feedforward + proportional control). We can find out the error by using block diagram algebra:
+\begin{align*}
+    Y(s) &= P(s) U(s) \quad \text{(from TF definition)}\\
+    U(s) &= k_p E(s) + \frac{R(s)}{P(0)} \quad \text{(taking Laplace transform of $u(t)$ equation)} \\
+    E(s) &= R(s) - Y(s)
+\end{align*}
+We need $E(s)$ to find the steady-state error. So, we substitute $Y(s)$ into $E(s)$:
+\begin{align*}
+    E(s) &= R(s) - P(s) U(s) \\
+    &= R(s) - P(s) \left(k_p E(s) + \frac{R(s)}{P(0)}\right) \\
+    &= R(s) - P(s) k_p E(s) - P(s) \frac{R(s)}{P(0)} \\
+    &= R(s) - P(s) k_p E(s) - \frac{P(s)}{P(0)} R(s) \\
+    &= R(s) \left(1 - \frac{P(s)}{P(0)}\right) - P(s) k_p E(s)
+\end{align*}
+Simplify to find $E(s)$:
+\begin{align*}
+    E(s) + P(s) k_p E(s) &= R(s) \left(1 - \frac{P(s)}{P(0)}\right) \\
+    E(s)(1 + P(s) k_p) &= R(s) \left(1 - \frac{P(s)}{P(0)}\right) \\
+    E(s) &= \frac{R(s) \left(1 - \frac{P(s)}{P(0)}\right)}{1 + P(s) k_p}
+\end{align*}
+Now, apply final value theorem to get the steady-state error:
+\begin{align*}
+    e_{ss} &= \lim_{t \to \infty} e(t) \\
+    &= \lim_{s \to 0} s E(s) \\
+    &= \lim_{s \to 0} s \frac{R(s) \left(1 - \frac{P(s)}{P(0)}\right)}{1 + P(s) k_p} \\
+    &= \lim_{s \to 0} s \frac{\frac{1}{s} \left(1 - \frac{P(s)}{P(0)}\right)}{1 + P(s) k_p} \\
+    &= \lim_{s \to 0} \frac{1 - \frac{P(s)}{P(0)}}{1 + P(s) k_p} \\
+    &= \frac{1 - \frac{P(0)}{P(0)}}{1 + P(0) k_p} \\
+    &= 0
+\end{align*}
+Thus, the steady-state error is zero! This is a significant improvement over the P-only controller. However, this feedforward controller has some limitations. For example, it requires knowledge of the DC gain of the plant $P(0)$, which may not be available or may change over time. 
+
+So, we look for another controller that can achieve zero steady-state error without requiring knowledge of the DC gain. 
+
+\section{PI Controller}
+We build this new controller on the following idea:
+
+The proportional-only controller only uses the instantaneous error $e(t)$ to compute the control action. It does not take into account the history of all the error that has occurred in the past. If we want to achieve zero steady-state error, we can add a term that integrates the error over time. This way, if there is any persistent error, the integral term will accumulate and eventually drive the error to zero. This leads us to the proportional-integral (PI) controller:
+\[
+    u(t) = k_p e(t) + k_i \int_0^t e(\tau) d\tau
+\]
+where $k_i$ is the integral gain. 
+
+Let us draw the block diagram of the system with a PI controller (see Figure~\ref{fig:pi_control}). In this diagram, we show how the $k_i$ term is multiplied to the result of integrating the error signal (that is, we use an integrator block to represent the integral of the error signal).
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    >=Latex,
+    node distance=1.7cm,
+    block/.style={draw, rectangle, minimum height=1.0cm, minimum width=2.0cm},
+    sum/.style={draw, circle, inner sep=0pt, minimum size=6.5mm},
+]
+% ---- nodes ----
+\node (r) {$r$};
+\node[sum, right=1.6cm of r] (sumE) {};
+\node[block, right=1.6cm of sumE, minimum width=1.2cm] (kp) {$k_p$};
+\node[sum, right=1.8cm of kp] (sumU) {};
+\node[block, right=1.6cm of sumU] (Pplant) {$P(s)$};
+\node[right=1.6cm of Pplant] (y) {$y$};
+
+% integral branch ABOVE main line
+\node[block, above=1.2cm of kp] (int) {$\dfrac{1}{s}$};
+\node[block, right=1.6cm of int, minimum width=1.2cm] (ki) {$k_i$};
+
+% ---- main forward path with tap on error line ----
+\draw[->] (r) -- (sumE);
+\draw[->] (sumE) -- node[midway] (eTap) {} node[midway, below] {$e$} (kp);
+\draw[->] (kp) -- (sumU);
+\draw[->] (sumU) -- node[midway, above] {$u$} (Pplant);
+\draw[->] (Pplant) -- node[midway] (yTap) {} (y);
+
+% ---- integral branch: start from the error-line tap (not from the sum node) ----
+\draw[->] (eTap.center) |- (int.west);
+\draw[->] (int) -- (ki);
+\draw[->] (ki.south) -| (sumU.north);
+
+% ---- feedback: branch from the middle of the output arrow ----
+\draw[->] (yTap.center) |- ++(0,-1.6cm) -| (sumE.south);
+
+% ---- sum signs ----
+\node at ($(sumE.center)+(-0.10,0.16)$) {\scriptsize $+$};
+\node at ($(sumE.center)+(-0.10,-0.16)$) {\scriptsize $-$};
+
+\node at ($(sumU.center)+(-0.05,0.05)$) {\scriptsize $+$};
+% \node at ($(sumU.center)+(-0.18,-0.16)$) {\scriptsize $+$};
+
+\end{tikzpicture}
+\caption{Unity-feedback control with PI control.}
+\label{fig:pi_control}
+\end{figure}
+
+Now, we can find out the steady-state error for the PI controller. We can find out the error by using block diagram algebra:
+\begin{align*}
+    Y(s) &= P(s) U(s) \\
+    U(s) &= k_p E(s) + k_i \frac{E(s)}{s} \quad \text{(since Laplace transform of integral is $\frac{1}{s}$)} \\
+    E(s) &= R(s) - Y(s)
+\end{align*}
+We need $E(s)$ to find the steady-state error. So, we substitute $Y(s)$ into $E(s)$:
+\begin{align*}
+    E(s) &= R(s) - P(s) U(s) \\
+    &= R(s) - P(s) \left(k_p E(s) + k_i \frac{E(s)}{s}\right) \\
+    &= R(s) - P(s) k_p E(s) - P(s) k_i \frac{E(s)}{s} \\
+    &= R(s) - E(s) \left(P(s) k_p + P(s) k_i \frac{1}{s}\right)
+\end{align*}
+Simplify to get $E(s)$:
+\begin{align*}
+    E(s) \left(1 + P(s) k_p + P(s) k_i \frac{1}{s}\right) &= R(s) \\
+    E(s) &= \frac{R(s)}{1 + P(s) k_p + P(s) k_i \frac{1}{s}}
+\end{align*}
+Finally! We apply the final value theorem to find the steady-state error:
+\begin{align*}
+    e_{ss} &= \lim_{t \to \infty} e(t) \\
+    &= \lim_{s \to 0} s E(s) \\
+    &= \lim_{s \to 0} s \frac{R(s)}{1 + P(s) k_p + P(s) k_i \frac{1}{s}} \\
+    &= \lim_{s \to 0} s \frac{\frac{1}{s}}{1 + P(s) k_p + P(s) k_i \frac{1}{s}} \\
+    &= \lim_{s \to 0} \frac{1}{1 + P(s) k_p + P(s) k_i \frac{1}{s}} \\
+    &= 0
+\end{align*}
+The steady-state error is zero (yet again!). This controller does not require knowledge of the DC gain of the plant either! 
+
+But to get these great properties, we must pay! The PI controller can lead to more oscillations in system performance. How? Read on\dots
+\subsection{Example: Why does the PI controller lead to oscillations? {\color{blue} Not covered in class but good to read this over}}
+Consider the first-order plant
+    \[
+        G(s) = \frac{K}{\tau s + 1}, \qquad K>0,\ \tau>0,
+    \]
+    in unity negative feedback with a controller \(C(s)\). Let the reference be a unit step \(R(s)=1/s\). First up: consider the P-only controller so \(C(s)=k_p\). The closed-loop transfer function for this system is
+        \[
+            T_P(s) \;=\; \frac{C(s)G(s)}{1+C(s)G(s)}
+            \;=\; \frac{k_p \frac{K}{\tau s+1}}{1+k_p \frac{K}{\tau s+1}}
+            \;=\; \frac{k_p K}{\tau s + (1+k_p K)}.
+        \]
+        How many poles does it have? Only one. Where? At (the value of $s$ that makes the denominator zero):
+        \[
+            s = -\frac{1+k_p K}{\tau}.
+        \]
+        This is real and negative so it will lead to a single decaying exponential and will not oscillate or overshoot.
+
+Next up: consider the PI controller so \(C(s)=k_p+\frac{k_i}{s}\). The closed loop transfer function will be (you should try this for yourself!):
+        \[
+            T_{PI}(s)
+            = \frac{C(s)G(s)}{1+C(s)G(s)}
+            = \frac{K(k_p s + k_i)}{s(\tau s+1)+K(k_p s+k_i)}.
+        \]
+        Expand the denominator:
+        \[
+            s(\tau s+1)+K(k_p s+k_i)
+            = \tau s^2 + s + Kk_p s + Kk_i
+            = \tau s^2 + (1+Kk_p)s + Kk_i.
+        \]
+        So the closed-loop characteristic polynomial is
+        \[
+            \underbrace{\tau}_{a}s^2 + \underbrace{(1+Kk_p)}_{b}s + \underbrace{(Kk_i)}_{c} = 0.
+        \]
+        The closed-loop poles are complex conjugates (underdamped) when the discriminant is negative:
+        \[
+            b^2 - 4ac < 0
+            \quad\Longleftrightarrow\quad
+            (1+Kk_p)^2 < 4\tau(Kk_i).
+        \]
+\textbf{Concluding note:} Increasing \(k_i\) (integral action) increases the constant term \(Kk_i\), which can push the poles from real \(\rightarrow\) complex and produce oscillations and cause overshoot. But, increasing \(k_p\) increases the middle coefficient \(1+Kk_p\), which causes increased damping, that is, making oscillations less likely for fixed \(k_i\) and \(\tau\)). So, we learn that although integral action can eliminate steady-state error if it is made too aggressive relative to the plant time constant \(\tau\), it can introduce oscillatory behavior.
+    
+\section{PD Controller}
+To address the issue of oscillations with the PI controller, we can add a derivative term to the controller. The derivative term is essentially a prediction of the future error based on the current rate of change of the error! We can see this by re-writing the standard PD controller:
+\begin{align*}
+    u(t) &= k_p e(t) + k_d \frac{de(t)}{dt} \\
+    &= k_p (e(t) + \frac{k_d}{k_p} \frac{de(t)}{dt})
+\end{align*}
+Notice the second term: it is adding something to the current error $e(t)$. What is being added? It uses how quickly the error is changing (i.e., $\frac{de(t)}{dt}$) to predict what the error will be in the future. If the error is increasing, then the derivative term will add a positive value to the current error, which will make the controller more aggressive in reducing the error. If the error is decreasing, then the derivative term will add a negative value to the current error, which will make the controller less aggressive in reducing the error. Thus, the derivative term can help to reduce oscillations and improve stability of the system.
+
+\section{Next steps and practice problems}
+Try to derive the closed-loop transfer function for a system with a PD controller and for a PID controller. Then, find the steady-state error for a unit step input for both controllers. Compare the results with the P-only controller and the PI controller. 
+\end{document}
