@@ -1,0 +1,75 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+
+
+\documentclass{ee122_pset}
+
+% Assignment info
+\author{\rule{3cm}{0.4pt}} % Name placeholder
+\submitdate{\rule{3cm}{0.4pt}} % Submission date placeholder
+\problemset{Problem Set \#6: Practice midterm exam}
+\renewcommand{\duedate}{March 4, 2026}
+\shorttitle{Problem Set \#6}
+
+\begin{document}
+
+\problem{1} 
+You have a second order transfer function of a pendulum system
+\[
+G(s) = \frac{1}{s^2 + 2\zeta \omega_n s + \omega_n^2},
+\]
+with $\zeta = 0.5$ and $\omega_n = 2$. Solve the following:
+
+\problempart \textbf{[5 points]} Compute the poles of the system and describe (in words) the expected response of the system to a step input.
+
+\problempart \textbf{[5 points]} Find out the state-space representation of the system by defining two state variables $x_1$ and $x_2$ such that $x_1$ is the output of the system and $x_2$ is the derivative of the output. Write down the state equations in terms of $x_1$, $x_2$, and the input $u$.
+
+\problempart \textbf{[15 points]} Now, to validate your answer, write down your state-space equations in matrix form as 
+\[
+\dot{\textbf{x}} = A\textbf{x} + Bu, \qquad y = C\textbf{x},
+\]
+where $\textbf{x} = \begin{pmatrix}x_1 \\ x_2\end{pmatrix}$ is the state vector. Compute the transfer function of the system from the state-space representation and verify that it matches the original transfer function $G(s)$.
+
+\problempart \textbf{[5 points]} Answer True/False 
+\begin{enumerate}
+    \item The state-space representation of a system is unique.
+    \item The state-space is a frequency domain model.
+    \item The state space is a nonlinear model.
+    \item If the input is zero, the output will be equal to 0 for all time.
+    \item The poles of the system can be found by computing the eigenvalues of the matrix $A$ in the state-space representation.
+\end{enumerate}
+
+\problempart \textbf{[5 points]} What is the DC gain of the system? What does the DC gain represent in terms of the system response to a step input?
+
+\problempart \textbf{[10 points]} What is the steady-state error of the system to a unit step input? Compute the steady-state error of the system using the final value theorem when the input is a step input. 
+
+\problempart \textbf{[10 points]} Now, you want to design a controller to reduce the steady-state error of the system. You decide to use a proportional controller with gain $k_p$. Write down the closed-loop transfer function of the system with the proportional controller and compute the new steady-state error of the system to a unit step input.
+
+\problempart \textbf{[5 points]} How does the proportional controller affect the poles of the system? Compute the new poles of the system with the proportional controller and describe how the response of the system will change compared to the original system without the controller.
+
+\problempart \textbf{[10 points]} To further reduce the steady-state error, you decide to use a PI controller with proportional gain $k_p$ and integral gain $k_i$. Write down the closed-loop transfer function of the system with the PI controller and compute the new steady-state error of the system to a unit step input.
+
+\problempart \textbf{[5 points]} Draw block diagram representations for each of the cases where the system is being controlled above. Make sure to label the plant, the controller, the reference input, the error signal, and the output clearly in each block diagram.
+
+
+\vfill{}
+\begin{center}
+    [turn to next page]
+\end{center}
+
+\problem{2}
+For a DC motor system, the transfer function from the input voltage $u(t)$ to the angular velocity $p(t)$ of the motor is given by
+\[
+G(s) = \frac{P(s)}{U(s)} = \frac{K}{\tau s + 1},
+\]
+where $K$ is the DC gain and $\tau$ is the time constant of the system. In this problem, we consider a standard unity feedback control system. Answer the following questions:
+
+\problempart \textbf{[3 points]} Draw a block diagram of the DC motor system with a controller $C(s)$ connected in unity feedback. Label all components and signals clearly.
+
+\problempart \textbf{[10 points]} Consider a P-only controller with gain $k_p$ and a step input $R(s) = \frac{1}{s}$. Compute the output $y(t)$ in time-domain.
+
+\problempart \textbf{[10 points]} Repeat the previous problem with a PI controller with proportional gain $k_p$ and integral gain $k_i$. Compute the output $y(t)$ in time-domain.
+
+\problempart \textbf{[2 points]} Reflect on the differences in the system response between the P-only controller and the PI controller. Describe how the addition of the integral term in the PI controller affects the steady-state error and the transient response of the system compared to the P-only controller.
+\end{document}
