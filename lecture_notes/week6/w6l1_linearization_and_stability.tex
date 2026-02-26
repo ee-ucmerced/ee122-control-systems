@@ -1,0 +1,266 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\usepackage{geometry}
+\renewcommand{\releasedate}{February 23, 2026}
+
+\begin{document}
+
+\section*{EE 122/ME 141 Week 6, Lecture 1: Linearization}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set 5 is due 2/25.
+    \item Problem set 6 will be practice midterm exam. 
+    \item The goal of lab 5 is to obtain a linearized model of the nonlinear cart-pendulum or the rotary pendulum system. 
+    \item Midterm on Mar 04 (Wednesday). Exam duration: 90 minutes. Will cover all material from Week 1 to Week 6.
+\end{itemize}
+
+\section{Course structure}
+This course is divided into three parts: 
+\begin{enumerate}
+\item \textbf{Part 1:} Basics of control systems: In this part (Weeks 1 to 5), we studied the three fundamental modeling formalisms (ODEs, TFs, and state-space), applications of control in the real-world, simple control design using analysis of transfer functions, and the PID control. This part of the course is intended to convince you of the importance of this field and to give you the bare minimum set of tools that you can realistically apply in the future.
+\item \textbf{Part 2:} The theory of control design: In this part (Weeks 6 to 11), we will study the foundational theory of how dynamical systems modeling and control system design work mathematically. This part will cover the following topics: linearization of nonlinear dynamical systems, stability analysis of systems, state feedback control design, pole placement, an introduction to optimal control, and specialized frequency domain techniques such as using Bode plots, the Root locus, and Nyquist plots for control design. 
+\item \textbf{Part 3:} Advanced topics in control design: In the last two weeks of the course, we will touch on some of the advanced topics to give you a flavor of what's out there. These topics (typically graduate-level course material, when covered in detail) include nonlinear control design, adaptive control, and robust control.
+\end{enumerate}
+In terms of assessments, after Week 8, you will not have any more assigned lab experiments. Instead, your task will be to use the experimental setups in the lab to design a controller for a system of your choice for your final project. 
+
+\section{Reading}
+Today's lecture has topics from Chapter 6 of the textbook. So, you should read the sections on linearization in the textbook. Perhaps more useful than a controls textbook, the content of this lecture is built on your math background on Taylor's series and Jacobian matrices, so you may want to review those topics from your math courses.
+
+\section{What are nonlinear models?}
+\begin{popquiz}
+Is the model (described by a state variable $x$) below linear or nonlinear?
+\[
+\frac{d^3 x}{dt^3} + \sqrt{k}\Ddot x + kx = u
+\]
+where $k$ is a constant.
+\popqsplit 
+The model is linear since all the terms are linear in $x$ and its derivatives. The presence of $\sqrt{k}$ does not make the system nonlinear since it is a constant multiplier. Also note the important fact that the third derivative or the second derivative of $x$ does not make the system nonlinear. You do see something resembling a ``cubed'' power but its not an exponent. It is just a notation for taking the differentiation three times.
+\end{popquiz}
+When talking about dynamical system models, a model is nonlinear if it contains any nonlinear function of the state variables or their derivatives. For example, the following model is nonlinear because of the presence of the square term for $x_1$, the $\sin$ term and the $e^{(\cdot)}$ function:
+\[
+\begin{aligned}
+\dot x_1 &= x_1^2 + x_2,\\
+\dot x_2 &= \sin(x_1) + e^{x_2}.
+\end{aligned}
+\]
+\begin{popquiz}
+    Can you name some nonlinear functions that you might expect to see in mathematical models?
+\popqsplit
+Some common nonlinear functions include polynomial functions (e.g., $x^2$, $x^3$), trigonometric functions (e.g., $\sin(x)$, $\cos(x)$), exponential functions (e.g., $e^x$), logarithmic functions (e.g., $\log(x)$), and rational functions (e.g., $\frac{1}{x}$).
+\end{popquiz}
+
+Nonlinear models are all around us --- the way a bike moves, the calorie burn in a human body during exercise, growth of population, hysteresis in electromagnetic systems, and more. In fact, most real-world systems are nonlinear. Linearity is an ideal that exists in books and exams! Not really though --- these ideals are what lets us build the tools and the theory and act as good approximations to the real world. But the real world is nonlinear, and we need to be able to deal with that.
+
+In general, we define a nonlinear dynamical system using an ordinary differential equation (ODE) of the form:
+\[
+\dot x = f(x,u),
+\]
+where $f$ is a nonlinear function of the state variable $x$ and the input variable $u$. The state variable $x$ can be a vector of multiple variables, and the input variable $u$ can also be a vector of multiple inputs. The function $f$ can be any nonlinear function, and it can contain any of the nonlinear functions we mentioned above.
+
+However, we have not yet discussed any tools that directly apply to such a model. So, our goal in this lecture is to convert the model above into a form that we have seen before, the standard state-space model:
+\[
+\dot x = Ax + Bu.
+\]
+This process is called \textbf{linearization}, and it allows us to apply all the tools we have learned for linear systems to analyze and design controllers for nonlinear systems.
+\section{Example: Linearization of a nonlinear pendulum model}
+Consider a pendulum swinging down in the vertical plane (see Figure~\ref{fig:pendulum}) where it makes an angle $\alpha$ with the vertical axis. The forces that act on the pendulum are the gravitational force (downward), the external input ($u$) that we can apply to the pendulum, the tension force from the rod (along the rod direction), and the frictional force (opposite to the direction of motion).
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[>=Latex, line cap=round, line join=round]
+
+        % pivot
+        \coordinate (O) at (0,0);
+
+        % geometry
+        \def\L{3.0}
+        \def\ang{35} % degrees from vertical (to the left)
+
+        % bob location: angle from vertical
+        \coordinate (B) at ({-\L*sin(\ang)}, {-\L*cos(\ang)});
+
+        % vertical reference (dashed)
+        \draw[dashed, thick] (O) -- (0,-\L);
+
+        % rod
+        \draw[thick] (O) -- (B) node[midway, right] {$l$};
+
+        % bob
+        \draw[thick, fill=white] (B) circle (0.18);
+
+        % angle arc and label (between vertical and rod)
+        \draw[thick] (0,-0.6) arc[start angle=-90, end angle={-90-\ang}, radius=0.6];
+        \node at ({-0.45*sin(\ang/2)},{-0.45*cos(\ang/2)}) {$\alpha$};
+
+        % forces at bob
+        % gravity
+        \draw[->, thick] (B) -- ++(0,-1.2) node[midway, right] {gravity};
+
+        % input u (to the right)
+        \draw[->, thick] (B) -- ++(1.3,0) node[midway, above] {$u$};
+
+        % friction (opposite to direction of motion) shown leftward
+        \draw[->, thick] (B) -- ++(-1.3,0) node[midway, above] {friction};
+
+        % tension along the rod direction (toward pivot)
+        \draw[->, thick] (B) -- ($(B)!0.55!(O)$) node[midway, above left] {tension};
+
+    \end{tikzpicture}
+    \caption{A pendulum system.}
+    \label{fig:pendulum}
+\end{figure}
+The dynamics of the pendulum can be described by the following nonlinear ODE, that can be obtained by equating the torques on the pendulum. We have the gravitational torque $-mg\sin(\alpha)$, the input torque $u$, and the frictional torque $-b\dot \alpha$. If the moment of inertia of the pendulum is $J_m$, then we can write the dynamics as:
+\[
+J_m \ddot \alpha + mg\sin(\alpha) + b\dot \alpha = u.
+\]
+A common way in which you might have seen the linearization of this model is to say ``for small angles, $\sin(\alpha) \approx \alpha$''. But that will not always apply --- in general, you may see different kinds of nonlinearities. So, how can we linearize this model in a systematic way that applies to any nonlinear model? 
+
+Before we start building up the linearization, let's first try to understand what linearization even means, and what is it that it is really approximating?
+
+\subsection{Equilibrium points and local approximation of dynamics using linearization}
+When we are linearizing a system, we are claiming that around an operating point where everything is steady, the system behaves like a linear system for small deflections from that operating point. To formally define this, we introduce the concept of equilibrium points. An equilibrium point is a point in the state space where the system can remain indefinitely without any change. Mathematically, an equilibrium point $x^*$ satisfies:
+\[
+f(x^*, u^*) = 0,
+\]
+where $u^*$ is the input that keeps the system at equilibrium. In other words, if the system starts at $x^*$ and we apply the input $u^*$, it will stay at $x^*$ forever. To see this in a different way, notice that the above condition implies that $\dot x = 0$ at the equilibrium point, which means that the state does not change over time (the rate of change of the state is zero). So, the main idea of linearization is to find the equilibrium point(s) of the system and then approximate the dynamics around that point using a linear model. The key insight being that for small deviations around the equilibrium point, the system behaves linearly. Can you convince yourself that this is indeed the case? Try to draw some continuous nonlinear function, then pick a point on the curve, and see how the function looks like when you make small deviations around that point. You will see that the function looks like a straight line, which is the linear approximation of the function at that point. This is what we intend to find mathematically in the next step.
+\subsection{Process of linearization}
+Given the nonlinear model in the standard form $\dot x = f(x,u)$, we aim to linearize the system around an equilibrium point $(x^*, u^*)$. For the pendulum example, we can rewrite the system ODE by defining two state variables: $x_1 = \alpha$ and $x_2 = \dot \alpha$ to get to the standard system model. So, we have 
+\[\begin{aligned}
+\dot x_1 &= x_2,\\
+\dot x_2 &= \frac{1}{J_m}(u - mg\sin(x_1) - b x_2).
+\end{aligned}\]
+
+So, we have the $f$, which is the right hand side of the above equations:
+\[f(x,u) = \begin{bmatrix} x_2 \\ \frac{1}{J_m}(u - mg\sin(x_1) - b x_2) \end{bmatrix}.\]
+Clearly, the system model is nonlinear due to the presence of the $\sin$ function. 
+
+To linearize the system, we first find the equilibrium point by solving $f(x^*, u^*) = 0$. This gives us the equilibrium point as $x^* = [0, 0]^T$ and $u^* = 0$. So, our goal is to find a linear approximation of the system around the equilibrium point $(x^*, u^*) = (0,0)$. To do this, recall that you can use Taylor's series expansion to approximate a nonlinear function around a point. For any function $f(x)$ for a scalar $x$, we can write the Taylor's series expansion around a point $x^*$ as:
+\[
+f(x) = f(x^*) + f'(x^*)(x - x^*) + \frac{1}{2}f''(x^*)(x - x^*)^2 + \cdots
+\]
+This is where you will be able to see why the linearization is an approximation and why we impose the ``small deviations'' condition. Notice that the second order term above has $(x - x)^2$. For small deviations around the equilibrium point, the value of $(x - x^*)^2$ will be small and it will continue to become smaller and smaller as we take higher powers, as in the full Taylor's series expansion. So, under the assumption that the deviations around the equilibrium point are small, we can ignore the higher order terms in the Taylor's series expansion and keep only the first two terms to get a linear approximation of the function around the equilibrium point. This is the key idea behind linearization. That is, for the scalar function above, we can write the linear approximation as 
+\[
+f(x) \approx f(x^*) + f'(x^*)(x - x^*).
+\]
+For our case, we have a vector $x$ and a vector function $f(x,u)$ --- that is, a multivariate function (two variables in our case: $x$ and $u$). So, we need to use the multivariate version of Taylor's series expansion to get the linear approximation. The multivariate (two-variable) Taylor's series expansion of a function $f(x,u)$ around a point $(x^*, u^*)$ is given by:
+\begin{equation}
+    \label{eq:taylor}
+f(x,u) \approx f(x^*, u^*) + \frac{\partial f}{\partial x}(x^*, u^*)(x - x^*) + \frac{\partial f}{\partial u}(x^*, u^*)(u - u^*).
+\end{equation}
+This is the linear approximation of the function $f(x,u)$ around the point $(x^*, u^*)$. The matrices $\frac{\partial f}{\partial x}(x^*, u^*)$ and $\frac{\partial f}{\partial u}(x^*, u^*)$ are called the Jacobian matrices of $f$ with respect to $x$ and $u$, respectively, evaluated at the point $(x^*, u^*)$. How do we know that these are matrices? How can we compute these?
+
+Since $x$ is a vector of two variables, we can write 
+\[x = \begin{bmatrix}x_1 \\ x_2\end{bmatrix}.\]
+The function $f(x,u)$ is also a vector of two functions, so we can write \[f(x,u) = \begin{bmatrix}f_1(x,u) \\ f_2(x,u)\end{bmatrix}\] (note that we have found $f_1$ and $f_2$ above when we rewrote the system model in the standard form). So, the Jacobian matrix $\frac{\partial f}{\partial x}(x^*, u^*)$ is a $2 \times 2$ matrix because it will need to include all cross-terms: the derivative of $f_1$ with respect to $x_1$, the derivative of $f_1$ with respect to $x_2$, the derivative of $f_2$ with respect to $x_1$, and the derivative of $f_2$ with respect to $x_2$. Similarly, the Jacobian matrix $\frac{\partial f}{\partial u}(x^*, u^*)$ is a $2 \times 1$ matrix because it will include the derivative of $f_1$ with respect to $u$ and the derivative of $f_2$ with respect to $u$. So, we can write the Jacobian matrices as:
+\[
+\frac{\partial f}{\partial x}(x^*, u^*) =
+\begin{bmatrix}
+\frac{\partial f_1}{\partial x_1} & \frac{\partial f_1}{\partial x_2}\\[1ex]
+\frac{\partial f_2}{\partial x_1} & \frac{\partial f_2}{\partial x_2}
+\end{bmatrix}_{(x^*, u^*)},
+\qquad
+\frac{\partial f}{\partial u}(x^*, u^*) =
+\begin{bmatrix}
+\frac{\partial f_1}{\partial u}\\[1ex]
+\frac{\partial f_2}{\partial u}
+\end{bmatrix}_{(x^*, u^*)}.
+\]
+Now, we can compute the Jacobian matrices by taking the derivatives of $f_1$ and $f_2$ with respect to $x_1$, $x_2$, and $u$, and then evaluating them at the equilibrium point $(x^*, u^*) = (0,0)$. After computing the Jacobian matrices, we can plug them into the linear approximation equation~\eqref{eq:taylor} to get the linearized system model around the equilibrium point. That is, we have
+\begin{align*}
+\dot x &= f(x, u) \approx f(x^*, u^*) + \frac{\partial f}{\partial x}(x^*, u^*)(x - x^*) + \frac{\partial f}{\partial u}(x^*, u^*)(u - u^*) \\
+\text{since } &f(x^*, u^*) = 0 \text{ at the equilibrium point, we can simplify this to:}\\
+\dot x &\approx \frac{\partial f}{\partial x}(x^*, u^*) (x -x^*) + \frac{\partial f}{\partial u}(x^*, u^*) (u - u^*).
+\end{align*}
+Define a new variable $z = x - x^*$ and $w = u - u^*$. These variables represent the deviations from the equilibrium point. We have that $\dot z = \dot x$ since $x^*$ is a constant. So, we can rewrite the equation above to get our desired result, that is the linear model as:
+\[
+\dot z = J z + B w,
+\]
+which we can rewrite by redefining $z$ as $x$ and $w$ as $u$ to get the standard state-space form (note that this new $x$ and $u$ are not the same as the original $x$ and $u$, but they represent the deviations from the equilibrium point):
+So, the resulting linearized system will be in the form $\dot x = Ax + Bu$, where $A$ is the Jacobian matrix $\frac{\partial f}{\partial x}(x^*, u^*)$ and $B$ is the Jacobian matrix $\frac{\partial f}{\partial u}(x^*, u^*)$:
+\[
+\dot x = Ax + Bu.
+\]
+
+\subsection{Pendulum linear model}
+For the pendulum model, the Jacobian matrices are computed as follows:
+\[
+\frac{\partial f}{\partial x}(x^*, u^*) = \begin{bmatrix}
+0 & 1\\
+-\frac{mg}{J_m} & -\frac{b}{J_m}
+\end{bmatrix},
+\qquad
+\frac{\partial f}{\partial u}(x^*, u^*) = \begin{bmatrix}
+0\\
+\frac{1}{J_m}
+\end{bmatrix}.
+\]
+So, the linearized system model around the equilibrium point $(0,0)$ is given by:
+\[
+\dot x = \begin{bmatrix}
+0 & 1\\
+-\frac{mg}{J_m} & -\frac{b}{J_m}
+\end{bmatrix}x + \begin{bmatrix}
+0\\
+\frac{1}{J_m}
+\end{bmatrix}u.
+\]
+That is, the state-space matrices for the linearized system are:
+\[
+A = \begin{bmatrix}
+0 & 1\\
+-\frac{mg}{J_m} & -\frac{b}{J_m}
+\end{bmatrix},
+\qquad
+B = \begin{bmatrix}
+0\\
+\frac{1}{J_m}
+\end{bmatrix}.
+\]
+\begin{popquiz}
+    Can you find the transfer function of the linearized system model (assuming that the output of interest is the pendulum angle $x_1$)?
+    \popqsplit
+    To find the transfer function of the linearized system, we first expand the state equations as follows:
+\[
+\begin{aligned}
+\dot x_1 &= 0 \cdot x_1 + 1 \cdot x_2 + 0 \cdot u = x_2,\\
+\dot x_2 &= -\frac{mg}{J_m} \cdot x_1 - \frac{b}{J_m} \cdot x_2 + \frac{1}{J_m} \cdot u.
+\end{aligned}
+\]
+Next, we take the Laplace transform of both equations, assuming zero initial conditions:
+\[
+\begin{aligned}
+sX_1(s) &= X_2(s),\\
+sX_2(s) &= -\frac{mg}{J_m} X_1(s) - \frac{b}{J_m} X_2(s) + \frac{1}{J_m} U(s).
+\end{aligned}
+\]
+Now, we can express $X_2(s)$ in terms of $X_1(s)$ from the first equation:
+\[
+X_2(s) = sX_1(s).
+\]
+Substituting this into the second equation gives us:
+\[
+s(sX_1(s)) = -\frac{mg}{J_m} X_1(s) - \frac{b}{J_m} (sX_1(s)) + \frac{1}{J_m} U(s).
+\]
+Rearranging this equation, we get:
+\[
+s^2 X_1(s) + \frac{b}{J_m} s X_1(s) + \frac{mg}{J_m} X_1(s) = \frac{1}{J_m} U(s).
+\]
+Factoring out $X_1(s)$ on the left-hand side gives us:
+\[
+\left(s^2 + \frac{b}{J_m} s + \frac{mg}{J_m}\right) X_1(s) = \frac{1}{J_m} U(s).
+\]
+Finally, we can express the transfer function from $U(s)$ to $X_1(s)$ as:
+\[
+\frac{X_1(s)}{U(s)} = \frac{1/J_m}{s^2 + \frac{b}{J_m} s + \frac{mg}{J_m}} = \frac{1}{J_m s^2 + b s + mg}.
+\]
+Since the output of interest is $x_1$, the transfer function of the linearized system model is:
+\[
+\frac{Y(s)}{U(s)} = \frac{1}{J_m s^2 + b s + mg}.
+\]
+\end{popquiz}
+\end{document}
