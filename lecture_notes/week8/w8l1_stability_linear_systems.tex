@@ -5,6 +5,7 @@
 \input{macros.tex}
 \input{preamble.tex}
 \usepackage{geometry}
+\usetikzlibrary{positioning,calc,arrows.meta}
 \renewcommand{\releasedate}{March 2, 2026}
 
 \begin{document}
@@ -12,14 +13,214 @@
 \section*{EE 122/ME 141 Week 8, Lecture 1: Stability of Linear Systems}
 \subsection*{Instructor: \instructor}
 \subsection*{Date: \releasedate}
+
 \section{Announcements}
 \begin{itemize}
     \item No problem sets due this week. Problem set 7 will be released on Mar 11 and will be due on Mar 18.
     \item Lab 6 is to repeat Lab 5 so that everyone can finish it.
     \item Project information out soon.
 \end{itemize}
+\section{Course Map}
+To give you an idea about where we are at and where we are going in this course, the following is a high-level map of the course content (see Figure~\ref{fig:course_map}).
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{ee122_me141_course_map.png}
+    \caption{Course map showing the topics covered in the course and their relationships.}
+    \label{fig:course_map}
+\end{figure}
+
 \section{Learning Objectives}
 By the end of this lecture, you should be able to understand how to compute whether a linear system is stable or not. 
-\section{Stability of Linear Systems}
+
+\section{Reading}
 This lecture covers material directly from the textbook. Start reading from page \#5-11: \href{https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-dynamics\_24Jul2020.pdf}{link here}.
+
+\section{Linear Systems}
+A linear system in state-space form is given by the equations:
+\begin{align*}
+    \dot{x}(t) &= Ax(t) + Bu(t), \\
+    y(t) &= Cx(t) + Du(t).
+\end{align*}
+where $x(t) \in \mathbb{R}^n$ is the state vector, $u(t) \in \mathbb{R}^m$ is the input vector, $y(t) \in \mathbb{R}^p$ is the output vector, and $A$, $B$, $C$, and $D$ are matrices of appropriate dimensions. In this description, we note that the system that we are describing, let's say $G$, takes in inputs $u(t)$ and produces outputs $y(t)$. 
+
+The above system is usually the process or the plant description. When we control this system, we generate a $u$ using a controller that provides this as the input. So, the controller system takes in an error signal and produces $u$ as the output. We can write the controller system $C$ also in state-space form using controller states $x_c$ as follows:
+\begin{align*}
+    \dot{x}_c(t) &= A_c x_c(t) + B_c e(t), \\
+    u(t) &= C_c x_c(t) + D_c e(t),
+\end{align*}
+where $e(t) = r(t) - y(t)$.
+
+\begin{popquiz}
+    Draw a block diagram of a standard negative feedback control system that shows the state-space representation details of both the plant and the controller.
+    \popqsplit
+    Try to build this up from the block diagram we drew during the lecture.
+\end{popquiz}
+
+\section{Stability of Linear Autonomous Systems}
+To study the stability of a linear system, we first consider the autonomous case where there are no inputs, i.e., $u = 0$. The system then reduces to:
+\begin{align*}
+    \dot{x} &= Ax, \\
+    y &= Cx.
+\end{align*}
+You might wonder how the system responds if the input is zero. In this case, the system behavior is only dependent on the initial conditions $x(0) = x_0$, a vector of initial conditions of all $n$ states. If the initial conditions are zero, then the system remains at zero for all time since the rate of change is zero. However, if the initial conditions are non-zero, the response of the system will depend on the properties of the matrix $A$.
+\subsection{Special case: Matrix $A$ is diagonal}
+If the matrix $A$ is diagonal, then we have the expanded diagonal matrix with values $\lambda_1, \lambda_2, \ldots, \lambda_n$ on the diagonal. The system can be written as:
+\begin{align*}
+    \dot{x} = \begin{bmatrix}
+        \lambda_1 & 0 & \cdots & 0 \\
+        0 & \lambda_2 & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & \cdots & \lambda_n
+    \end{bmatrix} x.
+\end{align*}
+We can solve this system by decoupling it into $n$ separate scalar equations:
+\begin{align*}
+    \dot{x}_1 &= \lambda_1 x_1, \\
+    \dot{x}_2 &= \lambda_2 x_2, \\
+    &\vdots \\
+    \dot{x}_n &= \lambda_n x_n.
+\end{align*}
+Given that the system has initial conditions $x(0) = x_0$, we can solve each of these equations to find the solution by integrating each ODE. Recall that the integration of a first-order ODE as given above follows the form:
+\begin{align*}
+    \int \frac{dx_i}{x_i} = \int \lambda_i dt,
+\end{align*}
+where $i$ ranges from $1$ to $n$. Integrate this with the following limits:
+\begin{align*}
+    \int_{x_i(0)}^{x_i(t)} \frac{dx_i}{x_i} = \int_0^t \lambda_i dt.
+\end{align*}
+Integrating we get,
+\begin{align*}
+    \ln(x_i(t)) - \ln(x_i(0)) &= \lambda_i t\\
+    \ln\left(\frac{x_i(t)}{x_i(0)}\right) &= \lambda_i t\\
+    \frac{x_i(t)}{x_i(0)} &= e^{\lambda_i t}\\
+    x_i(t) &= x_i(0) e^{\lambda_i t}.
+\end{align*}
+So, we have the following solution for the system (in matrix form):
+\begin{align*}
+    x(t) = \begin{bmatrix}
+        e^{\lambda_1 t} & 0 & \cdots & 0 \\
+        0 & e^{\lambda_2 t} & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & \cdots & e^{\lambda_n t}
+    \end{bmatrix} x(0).
+\end{align*}
+We can write the solution in a more compact form as (by multiplying the diagonal matrix with $x(0)$):
+\begin{align*}
+    x(t) = \begin{bmatrix}
+        e^{\lambda_1 t} x_1(0) \\
+        e^{\lambda_2 t} x_2(0) \\
+        \vdots \\
+        e^{\lambda_n t} x_n(0)
+    \end{bmatrix}.
+\end{align*}
+\subsection{Stability Analysis}
+Recall that the $\epsilon-\delta$ definition of stability, informally, states that for every pair of initial conditions that are near each other, the response of the system to the two initial conditions should be close to each other. For the case of linear systems, it follows that we have the two solutions for two initial conditions as:
+\begin{align*}
+    x(t) &= \begin{bmatrix}
+        e^{\lambda_1 t} x_1(0) \\
+        e^{\lambda_2 t} x_2(0) \\
+        \vdots \\
+        e^{\lambda_n t} x_n(0)
+    \end{bmatrix}, \\
+    \hat{x}(t) &= \begin{bmatrix}
+        e^{\lambda_1 t} \hat{x}_1(0) \\
+        e^{\lambda_2 t} \hat{x}_2(0) \\
+        \vdots \\
+        e^{\lambda_n t} \hat{x}_n(0)
+    \end{bmatrix}.
+\end{align*}
+where $x(0)$ and $\hat{x}(0)$ are the two initial condition vectors. Let's define a matrix $\Lambda$ as the diagonal matrix with $e^{\lambda_i t}$ on the diagonal. Then we can write the two solutions as:
+\begin{align*}
+    x(t) &= \Lambda x(0), \\
+    \hat{x}(t) &= \Lambda \hat{x}(0).
+\end{align*}
+The distance between the two trajectories at time $t$ can be computed as:
+\begin{align*}
+    \|x(t) - \hat{x}(t)\|^2 &= \|\Lambda x(0) - \Lambda \hat{x}(0)\|^2 \\
+    &= \|\Lambda (x(0) - \hat{x}(0))\|^2 \\
+    &= (x(0) - \hat{x}(0))^T \Lambda^T \Lambda (x(0) - \hat{x}(0)).
+\end{align*}
+Thus, the distance between the two trajectories depends on the initial distance $\|x(0) - \hat{x}(0)\|$ and the matrix $\Lambda$. Since it is given to us that the initial conditions are close to each other, the stability behavior is solely determined by the behavior of $\Lambda$ as time $t$ increases. Let's look at $\Lambda$ again:
+\begin{align*}
+    \Lambda = \begin{bmatrix}
+        e^{\lambda_1 t} & 0 & \cdots & 0 \\
+        0 & e^{\lambda_2 t} & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & \cdots & e^{\lambda_n t}
+    \end{bmatrix}.
+\end{align*}
+The term $\Lambda^T \Lambda$ will be a diagonal matrix with $e^{2\lambda_i t}$ on the diagonal (you should try to prove this to yourself). Therefore, the distance between the two trajectories can be expressed as:
+\begin{align*}
+    \|x(t) - \hat{x}(t)\|^2 &= (x(0) - \hat{x}(0))^T \Lambda^T \Lambda (x(0) - \hat{x}(0)) \\
+    &= (x(0) - \hat{x}(0))^T \begin{bmatrix}
+        e^{2\lambda_1 t} & 0 & \cdots & 0 \\
+        0 & e^{2\lambda_2 t} & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & \cdots & e^{2\lambda_n t}
+    \end{bmatrix} (x(0) - \hat{x}(0)).
+\end{align*}
+
+To ensure that the system is stable, we need this distance to be small for all time $t$. This will happen if and only if $e^{2\lambda_i t}$ does not grow unbounded as $t$ increases. \textbf{This means that $\lambda_i$ must be negative for all $i$.} If any $\lambda_i$ is positive, then the corresponding term will grow exponentially, and the distance between the two trajectories will become large, indicating that the system is unstable. If all $\lambda_i$ are negative, then $e^{2\lambda_i t}$ will decay to zero as $t$ increases, ensuring that the distance between the two trajectories remains small, and thus the system is stable.
+
+\subsection{What if $\lambda_i$ is zero?}
+If $\lambda_i$ is zero, then the corresponding term $e^{2\lambda_i t}$ will be equal to 1 for all time $t$. In this case, the distance between the two trajectories will depend on the initial conditions. If the initial conditions are close to each other, then the distance will remain small, and the system can be considered stable in a weaker sense --- we call this, \textbf{marginally stable}. 
+
+If all $\lambda_i$ are zero, then the system remains at the initial conditions for all time as the rate of change is zero. This is how we define marginal stability.
+
+On the other hand, if any $\lambda_i$ is positive, then the system is unstable as the distance between trajectories will grow exponentially.
+
+\section{Relation to poles and transfer functions}
+For the linear system described by $\dot{x} = Ax + Bu$ and $y = Cx$, the transfer function $G(s)$ can be derived by taking the Laplace transform of the system equations. The transfer function is given by:
+\begin{align*}
+    G(s) = C(sI - A)^{-1}B.
+\end{align*}
+The inverse of the matrix will lead to a term $det(sI - A)$ in the denominator, which is a polynomial in $s$. The roots of this polynomial are called the poles of the system. The poles are directly related to the eigenvalues of the matrix $A$. Specifically, the poles of the system are the eigenvalues of $A$! You can see this by noting that the poles are the values of $s$ for which $det(sI - A) = 0$, which is equivalent to saying that $s$ is an eigenvalue of $A$. In the case of diagonal matrix $A$, all the values on the diagonal are indeed the eigenvalues of $A$.
+\begin{popquiz}
+Prove that for the diagonal matrix $A$, the eigenvalues are the diagonal entries $\lambda_i$.
+\popqsplit
+Compute the eigenvalues of diagonal $A$ as the roots of the characteristic polynomial $det(sI - A) = 0$.
+We have $sI - A = \begin{bmatrix}
+s - \lambda_1 & 0 & \cdots & 0 \\
+0 & s - \lambda_2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & s - \lambda_n
+\end{bmatrix}$. The determinant of this matrix is the product of the diagonal entries, which gives us:
+\begin{align*}
+    det(sI - A) = (s - \lambda_1)(s - \lambda_2) \cdots (s - \lambda_n).
+\end{align*}
+Setting this equal to zero gives us the roots of the characteristic polynomial:
+\begin{align*}
+    (s - \lambda_1)(s - \lambda_2) \cdots (s - \lambda_n) = 0.
+\end{align*}
+This implies that the roots are $s = \lambda_1, s = \lambda_2, \ldots, s = \lambda_n$. Therefore, the eigenvalues of the diagonal matrix $A$ are indeed the diagonal entries $\lambda_i$.
+
+\end{popquiz}
+\section{General case: Matrix $A$ is not diagonal}
+When the matrix $A$ in the system description $\dot x = Ax$ is not diagonal, we can still analyze the stability of the system by finding a transformation that diagonalizes $A$. 
+
+Since the original state-space, described by the state vectors $A$ does not exhibit a diagonal structure in $A$, we aim to find a tranformation $T \in \mathbb{R}^{n \times n}$ that transforms the state vector $x$ into a new state vector $z$ such that the system dynamics in terms of $z$ are governed by a diagonal matrix. We can define the new state vector as:
+\begin{align*}
+    z = Tx
+\end{align*}
+To find the dynamics of $z$, we can differentiate both sides with respect to time:
+\begin{align*}
+    \dot{z} = T\dot{x} = T(Ax) = (TA)x.
+\end{align*}
+Then, we can express $x$ in terms of $z$ by using the inverse of the transformation $T$:
+\begin{align*}
+    x = T^{-1}z.
+\end{align*}
+Substituting this back into the expression for $\dot{z}$ gives us:
+\begin{align*}
+    \dot{z} = (TA)T^{-1}z.
+\end{align*}
+If we can choose $T$ such that $TA T^{-1}$ is a diagonal matrix, then we can analyze the stability of the system in terms of the eigenvalues of this diagonal matrix, which will be the same as the eigenvalues of $A$.
+
+
+\textbf{Claim:} If you construct the transformation $T$ using the eigenvectors of $A$, then $TA T^{-1}$ will be a diagonal matrix with the eigenvalues of $A$ on the diagonal.
+
+You can (and should) try this out in MATLAB or Python. Choose any non-diagonal matrix $A$, compute its eigenvalues and eigenvectors, construct the transformation $T$ using the eigenvectors, and verify that $TA T^{-1}$ is indeed a diagonal matrix with the eigenvalues on the diagonal.
+
+\section{Next steps}
+In the next lecture, we will use diagonalization to analyze the stability of linear systems. Further, we will introduce the concept of state-feedback control and see how it can be used to modify the eigenvalues of the system to achieve desired stability properties.
 \end{document}
