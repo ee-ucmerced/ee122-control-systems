@@ -1,0 +1,56 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+
+
+\documentclass{ee122_pset}
+
+% Assignment info
+\author{\rule{3cm}{0.4pt}} % Name placeholder
+\submitdate{\rule{3cm}{0.4pt}} % Submission date placeholder
+\problemset{Problem Set \#7: Stability and control of linear systems}
+\renewcommand{\duedate}{February 25, 2026}
+\shorttitle{Problem Set \#7}
+
+\begin{document}
+
+\textbf{Important Note:} This problem set has one problem with multiple parts. Working on this problem set will help you complete all pre-lab work for Lab 7 (control of inverted pendulum). So the problem set serves two purposes!
+
+\problem{1}
+
+The goal of this problem is to design a controller that stabilizes a pendulum in the upright position. To achieve upright stability of the pendulum in the lab, we provide feedback action in one of two ways: (1) either by controlling the motion of the cart that supports the pendulum, or (2) by controlling the angles of the rotary servo motor that supports the pendulum. Both of these systems are four-dimensional with the four states being: 
+\begin{itemize}
+\item The pendulum angle $\alpha$ (measured from the vertical upright position, with counterclockwise being positive)
+\item The pendulum angular velocity $\dot{\alpha}$
+\item The cart position $x_c$ in the case of cart-pole or the servo angle $\theta$ in the case of rotary pendulum
+\item The cart velocity $\dot{x}_c$ in the case of cart-pole or the servo angular velocity $\dot{\theta}$ in the case of rotary pendulum
+\end{itemize} 
+
+Let us start by writing the linearized model of the pendulum. 
+
+\problempart \textbf{[5 points]} Write the linearized state-space model of the pendulum that you have derived in Lab 5 / Lab 6. \textbf{No need to repeat the derivation again.} Simply state the model in the form $\dot x = Ax + Bu$ where $x$ is the state vector and $u$ is the control input, and $y = Cx$ where $y$ is the output vector that represents the two measurements: the pendulum angle $\alpha$ and the cart position $x_c$ (or the rotary servo angle $\theta$). You must provide the matrices $A$, $B$, and $C$ in your answer with numerical values.
+
+\problempart \textbf{[10 points]} Is the system open-loop stable? Justify your answer by computing the eigenvalues of the $A$ matrix and using the stability criterion for linear systems. Don't do this by hand! Use MATLAB or Python to compute the eigenvalues.
+
+\problempart \textbf{[5 points]} Derive the characteristic equation of $A$ using the open-loop poles. 
+\medskip 
+Hint: The characteristic equation is given by $\det(sI - A) = 0$, where $s$ is a complex variable and $I$ is the identity matrix. You can use the eigenvalues of $A$ to write the characteristic equation in factored form.
+
+\problempart \textbf{[15 points]} Diagonalize the $A$ matrix by finding a similarity transformation that transforms $A$ into a diagonal matrix. Introduce the transformation $z = Tx$, where $T$ is the matrix of eigenvectors of $A$. Write the transformed system in the new coordinates $z$ and provide the new state-space representation $\dot z = A_z z + B_z u$ and $y = C_z z$.
+
+You should verify that your diagonalized system is correct by showing that $A_z$ is indeed a diagonal matrix and that the eigenvalues of $A$ are the diagonal entries of $A_z$.
+
+\problempart \textbf{[20 points]} Design a state feedback controller $u = -\hat{K}z$ that stabilizes the diagonalized system. Here, $\hat{K} = [\hat{k}_1, \hat{k}_2, \hat{k}_3, \hat{k}_4]$ is the state feedback gain vector that you need to determine. For this problem set, your goal is to obtain the values of the control gains by trial-and-error. In future weeks, you will be able to design controllers using more sophisticated methods.
+
+\textbf{Note:} MATLAB and Python control packages use the notation $u = -Kx$ and closed loop matrix is $A - BK$!
+
+\problempart \textbf{[10 points]} Obtain the closed-loop matrix $A_{cl, z}$ for the transformed system $\dot z = A_{cl, z} z$ by applying the control action obtained in the previous part. Compute the eigenvalues of the closed-loop matrix to validate that your designed controller stabilizes the system.
+
+\problempart \textbf{[20 points]} Transform the system back to the original coordinates, including the controller gain $\hat{K}$. Note that $u = - \hat{K} z = -\hat{K}Tx$, so the controller gains in the original coordinate system are $K = \hat{K} T$. You should be careful about matrix multiplication and dimensions of various matrices while solving this problem. 
+
+Prove that the system (in original coordinates) is stabilized by applying the control law $u = -K x$. 
+
+\problempart \textbf{[15 points]} Simulate the closed-loop system in MATLAB or Python to verify that the pendulum is stabilized in the upright position. You can use the initial condition $x(0) = [0.1, 0, 0, 0]^T$ (i.e., a small initial angle of 0.1 radians and zero initial velocities). Plot the time response of the pendulum angle $\alpha(t)$ and the cart position $x_c(t)$ (or servo angle $\theta(t)$) to show that the system is stabilized. Include your code for all parts and make sure to label your plots appropriately. 
+
+
+\end{document}
