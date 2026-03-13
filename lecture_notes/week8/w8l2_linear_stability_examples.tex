@@ -1,0 +1,265 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{March 12, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 8, Lecture 2: Stability of Linear Systems}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set 7 will be out tonight (Mar 12). 
+    \item Lab 7 (next week) will be on control of inverted pendulum.
+\end{itemize}
+\section{Learning Objectives}
+By the end of this lecture, you should be able to 
+\begin{itemize}
+\item Apply the stability criteria to determine the stability of linear dynamical systems.
+\item Understand how an unstable system can be stabilized by using a feedback control law.
+\end{itemize}
+
+\section{Reminder: Stability criteria for linear systems}
+In the last lecture, we derived the following stability criteria for linear systems $\dot{x} = Ax$:
+\begin{itemize}
+    \item The system is \textbf{stable} if the real part of all eigenvalues of $A$ are non-positive. That is, $\text{Re}(\lambda_i) \leq 0$ for all eigenvalues $\lambda_i$ of $A$. 
+    \item The system is \textbf{asymptotically stable} if all eigenvalues of $A$ have negative real parts. That is, $\text{Re}(\lambda_i) < 0$ for all eigenvalues $\lambda_i$ of $A$.
+    \item The system is \textbf{unstable} if there exists at least one eigenvalue of $A$ with positive real part. That is, $\text{Re}(\lambda_i) > 0$ for some eigenvalue $\lambda_i$ of $A$.
+\end{itemize}
+Note that if there are eigenvalues with zero real part, the system is stable but not asymptotically stable. In this case, the behavior of the system does not converge to the equilibrium point, but it also does not diverge away from it. However, there are some special cases where the system can be unstable even if all eigenvalues have non-positive real parts, such as when there are repeated eigenvalues with zero real part. 
+
+Practice the following examples from the in-class activity to apply these criteria and determine the stability of various linear systems:
+\begin{popquiz}
+For each system below, determine whether the system is stable, not stable, or asymptotically stable. Note that for linear systems $\dot{x} = Ax$, there is only one equilibrium point at $x=0$. So, the stability of the eq.pt. is the stability property of the system.
+% In the last column, briefly justify your answer using eigenvalues, solution behavior, or phase portrait intuition.
+% \vspace{1em}
+% \renewcommand{\arraystretch}{2.2}
+\begin{center}
+    \small 
+\begin{tabular}{|>{\centering\arraybackslash}m{0.24\textwidth}|
+                    >{\centering\arraybackslash}m{0.10\textwidth}|
+                    >{\centering\arraybackslash}m{0.13\textwidth}|
+                    >{\centering\arraybackslash}m{0.16\textwidth}|
+                    m{0.24\textwidth}|}
+\hline
+\textbf{System} & \textbf{Stable} & \textbf{Not stable} & \textbf{Asymp. stable} & \textbf{Why?} \\
+\hline
+
+$\dot{x} = -3x$ 
+& $\square$ & $\square$ & $\square$ & \\[1.2cm]
+\hline
+
+$\dot{x} = 0$
+& $\square$ & $\square$ & $\square$ & \\[1.2cm]
+\hline
+
+$\dot{x} =
+\begin{bmatrix}
+2 & 0\\
+0 & -10
+\end{bmatrix}x$
+& $\square$ & $\square$ & $\square$ & \\[1.5cm]
+\hline
+
+$\dot{x} =
+\begin{bmatrix}
+-2 & -1\\
+1 & 0
+\end{bmatrix}x$
+& $\square$ & $\square$ & $\square$ & \\[1.5cm]
+\hline
+
+$\dot{x} =
+\begin{bmatrix}
+1 & -4\\
+3 & 2
+\end{bmatrix}x$
+& $\square$ & $\square$ & $\square$ & \\[1.5cm]
+\hline
+
+\end{tabular}
+\end{center}
+\popqsplit 
+\begin{enumerate}
+    \item This system is asymptotically stable because the eigenvalue is $\lambda = -3$, which has a negative real part. An asymptotically stable system is also, of course, stable (weaker criteria). 
+    \item This system is stable but not asymptotically stable because the eigenvalue is $\lambda = 0$, which has zero real part. The solution to this system is $x(t) = x(0)$, which does not converge to zero but also does not diverge away from it. You remain at the initial condition value for all time. 
+    \item The eigen values of this system are $\lambda_1 = 2$ and $\lambda_2 = -10$. For diagonal matrices, the values on the diagonal are the eigenvalues. Here, we have one eigenvalue with positive real part ($\lambda_1 = 2$), so the system is unstable.
+    \item The eigenvalues of this system are $\lambda_1 = -1$ and $\lambda_2 = -1$. So, the system is asymptotically stable. Note that the eigenvalues are repeated, but they have negative real part, so the system is still asymptotically stable. You need to be careful with repeated eigenvalues with zero real part.
+    \item The eigenvalues of this system are $\lambda_1 = 1.5 \pm 3.428j$. Since the real part of the eigenvalues is positive, the system is unstable. Note that whenever eigenvalues are complex, they occur in conjugate pairs, so they have the same real part. This is true in general for any real-valued matrix $A$.
+\end{enumerate}
+\end{popquiz}
+\section{Stabilizing an unstable system}
+Let's consider the third system example above which is unstable due to one of the eigenvalues having positive real part. How can we stabilize this system? Let's start by exploring the system structure. We have
+\begin{align*}
+\dot{x} = \begin{bmatrix}
+2 & 0\\
+0 & -10
+\end{bmatrix}x
+\end{align*}
+\begin{popquiz}
+How many states does this system have? What are the state variables? What are the dimensions of the system matrix $A$?
+\popqsplit
+This system has 2 states, which we can denote as $x_1$ and $x_2$. The state vector is $x = [x_1; x_2]$. The system matrix $A$ is a 2x2 matrix.
+\end{popquiz}
+This system is unstable due to the eigenvalue $\lambda_1 = 2$, which is positive. Our goal is to stabilize this system -- that is, both eigenvalues must be negative. If we use feedback control to stabilize the system, then we call the stabilized system a closed-loop system. You can connect this back to the concepts that we have explored in the first half of the course where we explored the block diagrams of open-loop and closed-loop systems. Here, $\dot x = Ax$ is the open-loop system, and our goal is to introduce the feedback mechanism that applies a control input to stabilize the system, which will give us the closed-loop system. The closed-loop system dynamics (once the input has been applied) will boil down to $\dot x = A_{cl}x$, where $A_{cl}$ is the closed-loop system matrix. 
+\begin{popquiz}
+    Give an example of a $A_{cl}$ matrix that one might expect to see after applying a feedback control law that stabilizes the system. 
+    \popqsplit
+    A stabilized system will have all eigenvalues with negative real parts. For example, we could have
+\begin{align*}
+A_{cl} = \begin{bmatrix}
+-1 & 0\\
+0 & -15
+\end{bmatrix}
+\end{align*}
+\end{popquiz}
+
+\subsection{Control design}
+The first step is to include a control input in the system dynamics. We have seen before that we denote the control input as $u$ --- this is the input to the open-loop system. The standard representation of a system with the control input is 
+\begin{align*}
+\dot{x} = Ax + Bu
+\end{align*}
+where $B$ is the input matrix that determines how the control input $u$ affects the system states. The matrix $B$ is determined by the physical structure of the way system is actuated. Let's look at a 2D system structure:
+\begin{align*}
+\dot{x} = Ax + \begin{bmatrix} b_1 \\ b_2 \end{bmatrix}u
+\end{align*} 
+where the terms in the $B$ matrix determine how $u$, the control action, will impact the rate of change of states $x_1$ and $x_2$. If $x_1$ was position and $x_2$ was velocity and if we were applying a force input, then it is clear that the force impacts the acceleration ($\dot x_2$) term only. So, in that case, we would have $b_1 = 0$ and $b_2$ will be some term of $1/m$ where $m$ is the mass of the system. Similarly, for electrical systems, if you have a voltage input, it may impact the rate of change of current but not the rate of change of voltage. The takeaway is that $B$ is determined by the physical structure of the system and how it is actuated. We already know that $A$ is determined by the physics of the system --- it is the matrix that captures the intrinsic evolution of the states of the system. So, the only option for us to get to a stable $A_{cl}$ is to design the control input $u$ in a way that it stabilizes the system. 
+\begin{popquiz}
+To eventually obtain $\dot x = A_{cl}x$ for the same system states, starting with $\dot{x} = Ax + Bu$, what form could the control action take? 
+
+As a first step to this exploratory problem, note that we must have $u$ be a function of the system states $x$ for us to take $x$ as the common factor and get to $\dot x = A_{cl}x$. Now, $x$ is a $2\times 1$ vector while $u$ is a scalar. So, what must be the form of the control action $u$?
+\popqsplit
+Looking at the dimensions, we have $u$ as a scalar and $x$ as a 2D vector. To get from $\dot{x} = Ax + Bu$ to $\dot x = A_{cl}x$, we need to express $u$ as a linear function of $x$. This means that there must be some kind of term of size $1 \times 2$ that multiplies the $2 \times 1$ vector $x$ to give us a scalar. So, we propose the following form for the control action:
+\begin{align*}
+u = Kx
+\end{align*}
+where $K$ is a $1 \times 2$ matrix (or row vector) that we will design to stabilize the system.
+\end{popquiz}
+
+\subsection{State feedback control}
+From the above discussion, we find that we need a control action that depends on the states of the system. This is called \textbf{state feedback control}. The control input $u$ is a linear function of the state vector $x$, and the matrix $K$ is called the state feedback gain matrix. By substituting $u = Kx$ into the system dynamics, we get
+\begin{align*}
+\dot{x} = Ax + BKx = (A + BK)x
+\end{align*}
+The closed-loop system matrix is $A_{cl} = A + BK$. By designing the gain matrix $K$, we can modify the eigenvalues of the closed-loop system matrix $A_{cl}$ to achieve stability. 
+
+\begin{remark}
+    A note on notational choice: We choose $u = Kx$ for the control law. Another common notation is $u = -Kx$ (perhaps the more common one). Either of these is fine. The negative sign represents the negative feedback. So, in the case of $u = -Kx$, the control gains $K$ will usually have positive values and these correspond well to physical values in controlling the system. In the case of $u = Kx$, the control gains $K$ will usually have negative values to represent the negative feedback. The choice of notation is a matter of convention and does not affect the underlying principles of control design. You are allowed to use either notation as long as you are clear about your choice and apply it consistently throughout your analysis and design.
+\end{remark}
+
+\subsection{Design a stabilizing controller for the 2D example}
+Let's go back to the 2D example we had before:
+\begin{align*}
+\dot{x} = \begin{bmatrix}
+2 & 0\\
+0 & -10
+\end{bmatrix}x + \begin{bmatrix}
+b_1 \\ b_2
+\end{bmatrix}u
+\end{align*}
+We want to design a state feedback control law $u = Kx$ to stabilize this system. The closed loop matrix can be computed as follows:
+\begin{align*}
+A_{cl} = A + BK
+\end{align*}
+We have $BK$ as follows:
+\begin{align*}
+BK
+=
+\begin{bmatrix}
+b_1 \\ b_2
+\end{bmatrix}
+\begin{bmatrix}
+k_1 & k_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+b_1k_1 & b_1k_2\\
+b_2k_1 & b_2k_2
+\end{bmatrix}
+\end{align*}
+Therefore,
+\begin{align*}
+A_{cl}
+&=
+\begin{bmatrix}
+2 & 0\\
+0 & -10
+\end{bmatrix}
++
+\begin{bmatrix}
+b_1k_1 & b_1k_2\\
+b_2k_1 & b_2k_2
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+2 + b_1k_1 & b_1k_2\\
+b_2k_1 & -10 + b_2k_2
+\end{bmatrix}
+\end{align*}
+
+If $b_1 = 1$ and $b_2 = 1$, then we have
+\begin{align*}
+BK
+&=
+\begin{bmatrix}
+1 \\ 1
+\end{bmatrix}
+\begin{bmatrix}
+k_1 & k_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+k_1 & k_2\\
+k_1 & k_2
+\end{bmatrix}
+\end{align*}
+and so
+\begin{align*}
+A_{cl}
+&=
+\begin{bmatrix}
+2 & 0\\
+0 & -10
+\end{bmatrix}
++
+\begin{bmatrix}
+k_1 & k_2\\
+k_1 & k_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+2 + k_1 & k_2\\
+k_1 & -10 + k_2
+\end{bmatrix}
+\end{align*}
+
+Now, for a given choice of $k_1$ and $k_2$, we can compute the eigenvalues of $A_{cl}$ to determine the stability of the closed-loop system. Let's say we propose $k_1 = -3$ and $k_2 = 0$. Then, we have
+\begin{align*}
+A_{cl}
+&=
+\begin{bmatrix}
+    -1 & 0\\
+    -3 & -10
+\end{bmatrix}
+\end{align*}
+The eigenvalues of this matrix are $\lambda_1 = -1$ and $\lambda_2 = -10$. Since both eigenvalues have negative real parts, the closed-loop system is now asymptotically stable!
+
+\section{Next steps}
+We will discuss state-feedback control more formally and expand on the techniques that are available to design the gain matrix $K$ to achieve desired closed-loop properties in the next lecture. 
+
+Until then, try the following practice problem:
+\subsection{Practice Problem}
+Design a stabilizing state feedback control law for the last example in the practice worksheet above. That is, design a control law for the system
+\begin{align*}
+\dot{x} =
+\begin{bmatrix}
+1 & -4\\
+3 & 2
+\end{bmatrix}x + Bu
+\end{align*}
+where $B = \begin{bmatrix} 1 & 1 \end{bmatrix}^T$.
+\end{document}
