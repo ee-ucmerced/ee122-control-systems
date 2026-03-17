@@ -1,0 +1,127 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{March 16, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 9, Lecture 1: State Feedback Control}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set 7 due on Wed (Mar 18). You need your system matrices from Lab 5 and 6 to solve the problem set.
+    \item Lab 7 is on control of inverted pendulum. 
+\end{itemize}
+\section{Learning Objectives}
+\begin{enumerate}
+    \item Apply state-feedback control to a first-order system example.
+    \item Understand the relationship between frequency-domain control design and time-domain control design
+\end{enumerate}
+\section{Recap}
+Last week, we started talking about designing state-feedback controllers for linear systems. We introduced the concept of state feedback and how it can be used to modify the dynamics of a system. Specifically, we discussed the control problem for a system in state-space form
+\begin{align*}
+    \dot x &= Ax + Bu \\
+    y &= Cx
+\end{align*}
+where $x$ is the state vector, $u$ is the control input, and $y$ is the output. Here, we design $u = -Kx$ where $K$ is the state feedback gain matrix. The closed-loop dynamics of the system under state feedback control are given by
+\begin{align*}
+    \dot x &= (A - BK)x \\
+    y &= Cx
+\end{align*}
+Note that last time decided that the notation could either be $u = -Kx$ or $u = Kx$ as long as we are consistent. However, despite voting on $u = Kx$ in class, we will use the more standard notation $u = -Kx$ in the course since the MATLAB and Python control packages use this notation (and also the textbook!). Let's apply this state feedback control design to a simple example to see how it works in practice. But first, we will start by reviewing how the previous part of the course fits here. We have been designing controllers in the frequency domain by evaluating transfer functions. So, let's start with a transfer function.
+\section{Frequency-domain design for first-order system}
+Consider a first-order system $G(s)$ with the following transfer function:
+\begin{align*}
+    G(s) = \frac{b}{as + 1}
+\end{align*}
+where $a, b > 0$ are positive constants.
+This transfer function is representative of many common physical systems --- an RC circuit, a DC motor are two examples. Here $a$ describes the system time constant, that is, how fast it responds to inputs. The parameter $b$ describes the system gain, that is, how much the output changes in response to a change in the input. 
+\subsection{Effect of proportional control design}
+Solve the pop-quiz below to review the concepts from the previous part of the course.
+\begin{popquiz}
+For the system $G(s)$ what are the open-loop poles? If we apply a unity negative feedback controller $C(s) = K_p$, what are the closed-loop poles of the system? How does the closed-loop pole location change as we increase $K_p$? 
+\popqsplit 
+It is highly recommended that you draw a block diagram first before starting to solve the problem. We skip the diagram here and jump to the answers directly. The open-loop pole of the system (the values of $s$ that make the denominator of $G(s)$ zero) is at $s = -\frac{1}{a}$. 
+
+Since the language of the problem describes that the ``closed loop'' is when there is a unity negative feedback with a proportional controller $C(s) = K_p$, we can write the closed-loop transfer function as
+\begin{align*}
+    T(s) = \frac{C(s)G(s)}{1 + C(s)G(s)} = \frac{\frac{bK_p}{as + 1}}{1 + \frac{bK_p}{as + 1}} = \frac{bK_p}{as + 1 + bK_p}
+\end{align*}
+The closed-loop poles are the values of $s$ that make the denominator of $T(s)$ zero, which gives us
+\begin{align*}
+    as + 1 + bK_p = 0 \implies s = -\frac{1 + bK_p}{a}
+\end{align*}
+Since $a, b, K_p > 0$, we see that the pole location moves to the left in the complex plane as we increase $K_p$. This means that the system response converges faster to the equilibrium point.
+\end{popquiz} 
+\section{Time-domain control design for first-order system}
+To design a controller in the time domain, we need to first write the system in state-space form. The description given to us is in the form of a transfer function --- a frequency domain representation. Let's convert this transfer function into a state-space representation (remember that the state-space representation is not unique, so there are multiple ways to do this). 
+
+A simple approach is to start with the transfer function and then use the fact that $s = \frac{d}{dt}$ in the time domain. Before we do this, answe the following pop quiz
+\begin{popquiz}
+    How many states do we need to define to represent the state-space form for this transfer function? That is, if $x \in \mathbb{R}^{n \times 1}$ is the state vector, what is $n$?
+\popqsplit
+Here, $n=1$ since the transfer function is first-order.
+\end{popquiz}
+
+Important point that you should note is that state-space form has a $\dot{x}$ term on the left hand side and there are no dot terms on the right hand side. So, we need to rearrange the transfer function to write it such that the derivative terms appear only with a single derivative. Another way to say this is when you have a second order system, you will see double derivatives, and in other higher order transfer functions you will see higher order derivatives. The way you get around these is by simply defining state variables that represent the derivatives so that each next state definition is the derivative of the previous state until you can write out the equation such that there are only single derivative terms. 
+
+For the first-order system we have the transfer function
+\begin{align*}
+    G(s) = \frac{b}{as + 1}
+\end{align*}
+Since $G(s)$ is the ratio of the output to input in the frequency domain, we can write
+\begin{align*}
+    \frac{Y(s)}{U(s)} = \frac{b}{as + 1} \implies (as + 1)Y(s) = bU(s)
+\end{align*}
+Manipulate this further to write,
+\begin{align*}
+    asY(s) + Y(s) = bU(s) 
+\end{align*}
+Notice the left hand side has a term with $s$, this is the term that will become a derivative when we take inverse Laplace transform to get to time-domain. Let's take the inverse Laplace transform to write 
+\begin{align*}
+    a\dot y(t) + y(t) = bu(t)
+\end{align*}
+The key question when deriving the state-space is to define the state variables. Here a straightforward choice is to define the state variable as the output of the system, that is, $x = y$. With this choice, we can write the state-space representation as
+\begin{align*}
+    \dot x(t) &= -\frac{1}{a}x(t) + \frac{b}{a}u(t) \\
+    y(t) &= x(t)
+\end{align*}
+So, the state-space matrices are given by
+\begin{align*}
+    A = -\frac{1}{a}, \quad B = \frac{b}{a}, \quad C = 1
+\end{align*}
+Now that we have the state-space representation, we can design a state feedback controller $u = -K_{\text{sfc}}x$ to stabilize the system. 
+\subsection{State-feedback control design}
+To study the equivalence of state-feedback control design with the previous proportional-only control design, the goal is to find out what value of $K_{\text{sfc}}$ will give us the same closed-loop pole location as the proportional control design with gain $K_p$. 
+
+The closed-loop dynamics under state feedback control are given by
+\begin{align*}
+    \dot x &= (A - BK_{\text{sfc}})x \\
+    y &= Cx
+\end{align*}
+Here, we have 
+\begin{align*}
+    A - BK_{\text{sfc}} = -\frac{1}{a} - \frac{b}{a}K_{\text{sfc}} = -\frac{1 + bK_{\text{sfc}}}{a}
+\end{align*}
+The closed-loop pole is at $s = -\frac{1 + bK_{\text{sfc}}}{a}$. To match the closed-loop pole location with the proportional control design, we need to set
+\begin{align*}
+    -\frac{1 + bK_{\text{sfc}}}{a} = -\frac{1 + bK_p}{a} \implies K_{\text{sfc}} = K_p
+\end{align*}
+This shows that the state feedback control design with gain $K_{\text{sfc}} = K_p$ achieves the same closed-loop pole location as the proportional control design with gain $K_p$. This illustrates the equivalence of state-feedback control design and frequency-domain control design for this first-order system.
+
+\subsection{Takeaway message}
+The main takeaway here is that the state-feedback control can achieve the same performance as the \textbf{output feedback} control. This is trivial in some ways because $x$ is the same as $y$ in this example. However, in general, the state-feedback controller allows us to use the information from \textbf{all states of the system} to design the control input, whereas the output feedback controller only uses the information from the output. So, the state-feedback control design is the superset of the output feedback control design, and it can achieve better performance if we have access to all states. Of course, we pay a price for this improved performance in terms of needing to measure or estimate all states, which is not always possible in practice. 
+
+\subsection{Next steps}
+We will talk about ways to synthesize the state feedback gain $K$ for any state-space system. Try the following problem to see if you understood the concepts of this lecture:
+\begin{popquiz}
+For the first-order transfer function $G(s) = \frac{b}{as + 1}$, write a different state-space representation than the one we derived above (that is, define the state to be something different). For this new state-space representation, find out the equivalent state feedback gain $K_{\text{sfc}}$ that will give you the same closed-loop pole location as the proportional control design with gain $K_p$.
+\popqsplit
+Solution not provided. 
+\end{popquiz}
+
+\end{document}
