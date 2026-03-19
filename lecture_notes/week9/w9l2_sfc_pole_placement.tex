@@ -1,0 +1,201 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{March 19, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 9, Lecture 2: State-feedback control for pole placement}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set 7 due Wed 3/18.
+\end{itemize}
+\section{Learning Objective}
+ Apply state-feedback control to a second-order system example and understand how poles of the closed-loop system can be placed at desired locations in the complex plane by choosing appropriate state feedback gains.
+\section{Recap}
+Last lecture, we set up the state-feedback based control design problem and applied it to a first-order system example. We saw how the closed-loop poles of the system can be modified by choosing appropriate state feedback gains. Indeed, we saw how the proportional control for a first-order system can be interpreted as a state feedback control design with the same proportional gain. This may have seemed trivial to an extent --- is it generally true that state-feedback control is just a proportional control (P-only control)? The answer is no! We will see this today.
+\section{Motivative example: The climate of Merced}
+To motivate the need and the benefit of state-feedback control, let us consider a system that describes the climate of Merced. We would like to control the climate of Merced to be more desirable. What are some states that can describe the climate of Merced? Some examples might include the temperature, the humidity, the air pollution, and (just to mix it up) the entropy of the system. The last state is clearly not something that can be measured but it is certainly a state that can be used to describe the climate of Merced. When we write down the state space description of the system, the state vector $x$ will include all of these states. The state dynamics of the entropy might be influenced by the temperature and the humidity, and the air pollution might be influenced by the temperature and the humidity as well. These dependencies are captured in the $A$ matrix of the state-space model ($\dot x = Ax + Bu$). The output equation of the state-space model, $y = Cx$, is not a ''free choice by the engineer'' but it is certainly a choice that describes the problem of interest. The variable $y$ is described to include any variables that we care about. If we only care about the temperature, then $y = x_1$ where $x_1$ is the temperature state. This can be written using the $y = Cx$ standard equation by defining a $C \in \mathbb{R}^{1 \times 4}$ matrix that has a 1 in the first column and zeros everywhere else. If we care about the temperature and the humidity independently, but both are important for us, we might write $y = [x_1, x_2]^T$ where $x_1$ is the temperature and $x_2$ is the humidity. This can be written using the $y = Cx$ standard equation by defining a $C \in \mathbb{R}^{2 \times 4}$ matrix that has a 1 in the first column and a 1 in the second column, and zeros everywhere else. If we care about the temperature and the humidity in a combined way, we might write $y = x_1 + x_2$ where $x_1$ is the temperature and $x_2$ is the humidity. This can be written using the $y = Cx$ standard equation by defining a $C \in \mathbb{R}^{1 \times 4}$ matrix that has a 1 in the first column and a 1 in the second column, and zeros everywhere else. 
+
+When designing a controller to get a desired $y$ in the climate model, we need to design what $u$ is equal to --- the control action. In output-feedback control, the only information that we have about the system is the output $y$. So, the control action $u$ can only be a function of $y$. This is the approach that we took in the previous part of the course when we designed controllers using transfer functions. In state-feedback control, we \textit{assume} that we have access to the full state vector $x$. This is a strong assumption but it allows us to design more powerful controllers. The control action $u$ can be a function of the entire state vector $x$. This allows us to design controllers that can achieve desired closed-loop pole locations that are not achievable with output-feedback control. We will see this in the example that we will work through today.
+\section{A second-order system example}
+For a second order system, we have been working with the following standard form of the transfer function:
+\begin{align*}
+    G(s) = \frac{\omega_n^2}{s^2 + 2\zeta \omega_n s + \omega_n^2}
+\end{align*}
+where $\omega_n$ is the natural frequency of the system and $\zeta$ is the damping ratio of the system. The poles of this system are given by
+\begin{align*}
+    s = -\zeta \omega_n \pm j \omega_n \sqrt{1 - \zeta^2}
+\end{align*}
+Now, if we apply a proportional controller $C(s) = K_p$ to this system, the closed-loop transfer function becomes
+\begin{align*}
+    T(s) = \frac{C(s)G(s)}{1 + C(s)G(s)} = \frac{\frac{K_p \omega_n^2}{s^2 + 2\zeta \omega_n s + \omega_n^2}}{1 + \frac{K_p \omega_n^2}{s^2 + 2\zeta \omega_n s + \omega_n^2}} = \frac{K_p \omega_n^2}{s^2 + 2\zeta \omega_n s + (1 + K_p)\omega_n^2}
+\end{align*}
+
+We can clearly see that $K_p$ only affects the $\omega_n^2$ term in the denominator of the closed-loop transfer function, which means that it only affects the natural frequency of the system. The damping ratio $\zeta$ is not affected by $K_p$! This means that we cannot achieve arbitrary pole locations by using a proportional controller. In particular, we cannot achieve poles that are more negative than the open-loop poles of the system. This is a huge limitation! Let's see if we can do any better with a state-feedback controller.
+
+\section{State-feedback control design for second-order system}
+To design a controller in state-space, we must first have a state-space model of the system. So, our first task is to derive the state-space model from the transfer function. 
+
+Here are the steps that you can follow:
+\begin{itemize}
+\item Cross multiply the transfer function equation: 
+\begin{align*}
+    \frac{Y(s)}{U(s)} = \frac{\omega_n^2}{s^2 + 2\zeta \omega_n s + \omega_n^2} 
+\end{align*}
+to write terms with $s$ on the left-hand side and terms without $s$ on the right-hand side. 
+\item To convert from frequency domain to time domain, we need to use the inverse Laplace transform. Some useful inverse Laplace transform pairs are:
+\begin{align*}
+s^2 Y(s) &\leftrightarrow \ddot y(t) \\
+s Y(s) &\leftrightarrow \dot y(t) \\
+Y(s) &\leftrightarrow y(t) \\
+\end{align*}
+\item Define the states of the system. This is the most critical and the most important step. But also, you can't go wrong because there is no fixed answer to how to do this. A simple assignment that works when transforming a transfer function to state space is to assume that the first state $x_1 = y$. 
+\item Note that the state-space equation is written such that there is only one derivative on the left-hand side and no derivative terms on the right-hand side. So, we need to rearrange the equation to get it in this form.
+\end{itemize}
+\begin{popquiz}
+Following the steps above, derive the state-space model of the second-order system given by the transfer function
+\begin{align*}
+    G(s) = \frac{\omega_n^2}{s^2 + 2\zeta \omega_n s + \omega_n^2}
+\end{align*}
+\popqsplit
+The state-space model of the system can be derived as follows:
+\begin{align*}
+    (s^2 + 2\zeta \omega_n s + \omega_n^2)Y(s) &= \omega_n^2 U(s) \\
+    s^2 Y(s) + 2\zeta \omega_n s Y(s) + \omega_n^2 Y(s) &= \omega_n^2 U(s) \\
+    s^2 Y(s) &= - 2\zeta \omega_n s Y(s) - \omega_n^2 Y(s) + \omega_n^2 U(s)
+\end{align*}
+Now, we can define the states as follows:
+\begin{align*}
+    x_1 &= y \\
+    x_2 &= \dot y
+\end{align*}
+Using the inverse Laplace transform pairs, we can write the state-space equations as follows:
+\begin{align*}
+    \dot x_1 &= x_2 \\
+    \dot x_2 &= - 2\zeta \omega_n x_2 - \omega_n^2 x_1 + \omega_n^2 u
+\end{align*}
+So, the state-space representation of the system is given by
+\begin{align*}
+    \dot x &= Ax + Bu \\
+    y &= Cx
+\end{align*}
+where
+\begin{align*}
+    A = \begin{bmatrix}
+    0 & 1 \\
+    -\omega_n^2 & -2\zeta \omega_n
+    \end{bmatrix}, \quad B = \begin{bmatrix}
+    0 \\
+    \omega_n^2
+    \end{bmatrix}, \quad C = \begin{bmatrix}
+    1 & 0
+    \end{bmatrix}
+\end{align*}
+\end{popquiz}
+Now that we have the state-space model of the system
+\begin{align*}
+    \dot x &= \begin{bmatrix}
+    0 & 1 \\
+    -\omega_n^2 & -2\zeta \omega_n
+    \end{bmatrix} x + \begin{bmatrix}
+    0 \\
+    \omega_n^2
+    \end{bmatrix} u \\
+    y &= \begin{bmatrix}
+    1 & 0
+    \end{bmatrix} x
+\end{align*}
+
+we can design a state feedback controller $u = -Kx$ to stabilize the system. The closed-loop dynamics under state feedback control are given by
+\begin{align*}
+    \dot x &= (A - BK)x \\
+    y &= Cx
+\end{align*}
+\begin{popquiz}
+For $K = [k_1, k_2]$, find out the closed loop matrix $A_{cl} = A - BK$ by performing the matrix multiplication of $B$ and $K$ and then subtracting it from $A$. 
+\popqsplit 
+The closed-loop matrix $A_{cl}$ can be computed as follows:
+\begin{align*}
+    BK &= \begin{bmatrix}
+    0 \\
+    \omega_n^2
+    \end{bmatrix} [k_1, k_2] = \begin{bmatrix}
+    0 & 0 \\
+    \omega_n^2 k_1 & \omega_n^2 k_2
+    \end{bmatrix} \\
+    A_{cl} &= A - BK = \begin{bmatrix}
+    0 & 1 \\
+    -\omega_n^2 & -2\zeta \omega_n
+    \end{bmatrix} - \begin{bmatrix}
+    0 & 0 \\
+    \omega_n^2 k_1 & \omega_n^2 k_2
+    \end{bmatrix} 
+    \\ &= \begin{bmatrix}
+    0 & 1 \\
+    -\omega_n^2 (1 + k_1) & -2\zeta \omega_n - \omega_n^2 k_2
+    \end{bmatrix}
+\end{align*}
+
+\end{popquiz}
+Notice that the closed-loop matrix follows a very similar structure to the open-loop $A$ matrix:
+\begin{align*}
+    A &= \begin{bmatrix}
+    0 & 1 \\
+    -\omega_n^2 & -2\zeta \omega_n
+    \end{bmatrix},\\
+     A_{cl} &= \begin{bmatrix}
+    0 & 1 \\
+    -\omega_n^2 (1 + k_1) & -2\zeta \omega_n - \omega_n^2 k_2
+    \end{bmatrix}
+\end{align*}
+
+In fact, we can use this comparison to immediately write down the characteristic equation of the closed-loop system without doing any matrix algebra. The characteristic equation of the closed-loop system is given by
+\begin{align*}
+    \det(sI - A_{cl}) = 0
+\end{align*}
+Here, we don't need to compute the determinant. We observe that the structure is same but with different coefficients. So, we can directly write down the characteristic equation as
+\begin{align*}
+    s^2 + (2\zeta \omega_n + \omega_n^2 k_2)s + \omega_n^2 (1 + k_1) = 0
+\end{align*}
+
+This already tells us that the state-feedback controller can modify both the natural frequency and the damping ratio of the system by choosing appropriate values of $k_1$ and $k_2$. This is a huge advantage over the proportional control design where we could only modify the natural frequency.
+
+\section{Pole placement}
+Now let us assume that we wanted to place the closed-loop poles at some desired locations in the complex plane: $p_1$ and $p_2$. The characteristic equation of the closed-loop system can be written in terms of the desired pole locations as
+\begin{align*}
+    (s - p_1)(s - p_2) = 0 \implies s^2 - (p_1 + p_2)s + p_1 p_2 = 0
+\end{align*}
+By comparing the coefficients of the characteristic equation of the closed-loop system with the characteristic equation in terms of the desired pole locations, we can write
+\begin{align*}
+    2\zeta \omega_n + \omega_n^2 k_2 &= -(p_1 + p_2) \\
+    \omega_n^2 (1 + k_1) &= p_1 p_2
+\end{align*}
+From these equations, we can solve for the state feedback gains $k_1$ and $k_2$ that will place the closed-loop poles at the desired locations $p_1$ and $p_2$. This is the essence of pole placement using state feedback control. By choosing appropriate values of $k_1$ and $k_2$, we can achieve any desired closed-loop pole locations, which allows us to shape the transient response of the system in a way that is not possible with output-feedback control.
+
+In MATLAB and Python, you can use the built-in functions \texttt{acker} or \texttt{place} to compute the state feedback gains for pole placement. These functions take the system matrices $A$ and $B$, and the desired pole locations as inputs, and return the state feedback gain vector $K$ that will place the closed-loop poles at the specified locations.
+
+\section{Next steps}
+How do we get the desired pole locations? Is there an art to it or is there a mathematical way to get locations that are `optimal' in some sense? We will discuss this in the next few weeks when we talk about the optimal control design. 
+
+To see if you understand the material of this lecture, try to answer the following problem!
+
+\begin{popquiz}
+    Consider a $n$-th order system with the following transfer function:
+\begin{align*}
+    G(s) = \frac{s^n + b_{n-1}s^{n-1} + \dots + b_1 s + b_0}{s^n + a_{n-1}s^{n-1} + \dots + a_1 s + a_0}
+\end{align*}
+Write the state-space representation of this system by following the steps we outlined in the lecture. You will get a general state-space form that is called the controllable canonical form. With this state-space form at hand, show how the state-feedback controller can be designed to place the closed-loop poles at any desired locations in the complex plane. You may define the desired pole locations as $p_1, p_2, \dots, p_n$ which gives you the desired characteristic equation of the closed-loop system as
+\begin{align*}
+    (s - p_1)(s - p_2) \dots (s - p_n) = 0
+\end{align*}
+\popqsplit
+Solution not provided
+\end{popquiz}
+
+\end{document}
