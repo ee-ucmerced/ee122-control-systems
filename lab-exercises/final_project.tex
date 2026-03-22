@@ -1,0 +1,120 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+
+% Assignment info
+\renewcommand{\releasedate}{March 21, 2026}
+\renewcommand{\instructor}{}
+% \shorttitle{Lab \#2}
+
+\begin{document}
+\section*{EE 122 / ME 141: Project Problem Statement}
+\subsection*{Release Date: \releasedate}
+{\color{blue}
+\subsection*{Changelog}
+Any significant changes that are made to the problem statement after the release date will be documented here. Please check this section before starting your work on the project.
+}
+
+
+\section{Instructions}
+EE 122 / ME 141: Introduction to Control Systems course requires a final project as a culmination of the course. This course gives you the General Education: Crossroads badge, or in other words, it satisfies your general education requirement of an interdisciplinary upper-division course. The course does sit at the intersection of Electrical Engineering and Mechanical Engineering, but it also has a lot of applications in other fields. The goal of the final project is to provide an opportunity to make this interdisciplinary learning tangible.
+
+For your final project, you are required to select a system of your choice and apply the control systems concepts that you have learned in this course to analyze and design controllers for this system. You will be required to run simulations and experiments on the system to evaluate the performance of your controllers.
+
+The expected outcome for the final project is a paper in IEEE format using the Overleaf template \href{https://www.overleaf.com/latex/templates/ieee-conference-template/grfzhhncsfqn}{available here}. To help you make progress towards the final project requirements, you will be required to submit two milestones worth 20 points each. The final paper submission is 60 points. The first milestone is on system modeling where you are required to select your system and present the mathematical models for this system, as needed for your project. The second milestone is on the control design aspects of your project where you are required to present the control design and analysis for your system.
+
+The final paper will have various sections that you must write:
+\begin{enumerate}
+\item Introduction: Introduce your system, the application area, the importance of your control problem etc. Must be at least half-page long (one column long in the two column format).
+\item Background: Describe in detail the work that others have done in this application area, highlight main advances in the area, and cite relevant literature (you must learn how to use Bibtex / Biblatex to cite papers). Must be at least half-page long (one column long in the two column format).
+\item Preliminaries: Describe the mathematical preliminaries that you would like the reader to know, and mathematical notation that you would like the reader to be familiar with. No length recommendation. You should define all notation and preliminaries adequately.
+\item Methods: Describe the methods you used in this paper in detail. This section is probably your most detailed section. You should include all details of the nonlinear model, your linearization method, your derivation for other types of models like transfer functions or state-space, the controller derivations, your methods for computing performance metrics, your approach for running simulations, defining experimental conditions, etc. All such detail should be in this section. 
+\item Results: In this section, include your simulation and experimental results along with all graphs. The results section consists of all outcomes of applying the methods above. There is no length recommendation but it is expected that you will at least have two graphs that describe different things about your work. The graphs must be labeled clearly and all font sizes must be visible.
+\item Discussion: This is the last section of the main body of the paper. In this section, you should discuss the outcomes that you obtained. DO NOT include your personal reflections or things that you learned as a student. You are writing this to share your insights about the system and your findings. Must be at least one paragraph long (4-6 sentences). Should not be more than 3 paragraphs long $\implies$ Keep it short.
+\item References: All cited literature should appear in the IEEE format in the References section automatically. Use the template suggested citation formatting.
+\item Appendix: If you have any lengthy derivations or other things you did not want to include in the main body, you may include in the Appendix. This is not required.
+\end{enumerate} 
+\section{System Selection}
+You are required to select a system for your final project. Here are possible choices for your system. There are no restrictions on how many students can select a particular system. You are encouraged to choose a system that you are interested in and that you think will be a good learning experience for you. 
+
+{\color{red} \textbf{Important note:}} For labs so far, you have been working together in groups. All members of a lab group must select different projects so that your pre-existing team does not end up working on the same thing.
+
+\subsection*{SE1 172 Lab Systems}
+
+\begin{enumerate}
+    \item Rotary Servo Base Unit: control the angular position of the rotary servo motor.
+
+    \item Rotary Servo Base Unit: control the angular velocity of the rotary servo motor.
+   
+    \item Linear Servo Base Unit: position control of the linear cart.
+    
+    \item Linear Servo Base Unit: control the translational velocity of the cart.
+        
+    \item Linear Servo Base Unit: control the cart to track reference signals.
+    
+    \item Linear Servo Base Unit: control the cart position under payload variations.
+  
+    \item Rotary Flexible Joint Module: control the motor-side motion in a compliant rotational system.
+        
+    \item Rotary Flexible Joint Module: control the load-side response of the flexible joint.
+        
+    \item Rotary Flexible Joint Module: control the oscillations caused by joint flexibility.
+
+    \item Rotary Flexible Link Module: control the base rotation of a flexible link system.
+
+    \item Sliding Rod System: control the translational motion of the sliding rod mechanism.
+
+    \item Shake Table I-40: control the position profile of the shake table platform.
+
+    \item Shake Table I-40: control the mass-spring-damper.
+    
+    \item Double Inverted Pendulum (with rotary servo): control a double inverted pendulum system to balance in the upright position.
+    
+    \item Double Inverted Pendulum (with linear cart): control a double inverted pendulum system to balance in the upright position.
+
+    \item RC Circuit (circuits lab): use an op-amp based controller to regulate the capacitor voltage to a desired reference.
+   
+    \item RLC Circuit (circuits lab): use an op-amp-based controller to regulate the capacitor voltage to a desired reference.
+
+\end{enumerate}
+
+\subsection*{DIY Systems}
+
+\begin{enumerate}
+    \item DC Motor System: set up a DC motor and encoder using an Arduino or Raspberry Pi and control the angular position of the motor.
+
+    \item Servo Motor System: control a servo motor to track desired angular position trajectories.
+
+    \item Automatic brightness adjustment: control an LED brightness using closed-loop intensity regulation.
+
+    \item Mobile Robot System: control the speed, heading, or path of a simple wheeled robot.
+    
+\end{enumerate}
+
+\section{Milestone \#1 Instructions}
+This milestone is your first big step towards completing you final project. This milestone will get you started with the Methods section of your paper. Please note that the sections preceding the Methods section are your tasks separately for the final paper submission. For the milestone submission, although the IEEE template is required, the Introduction, Background, Preliminaries, can be incomplete or in draft form. The tasks are to get you started with the Methods of your paper.
+
+\subsection{Specific tasks for milestone \#1}
+\begin{itemize}
+\item[Task 1] Choose the system that you will be working on by following the Final project problem statement PDF available on the course GitHub repository.
+\item[Task 2] Set up your computing environment $\implies$ Include a short subsection under Methods on computing environment. This is usually the last subsection of Methods but you need to start working on it as a first step.
+\begin{itemize}
+\item[Task 2.1] Decide whether you will be using MATLAB or Python. 
+\item[Task 2.2] Set up your personal computer to run your software of choice
+\item[Task 2.3] Identify the software that you will be running in the lab to collect experimental data
+\end{itemize}
+\item[Task 3] System description: 
+\begin{itemize}
+\item[Task 3.1] Describe the system in words, and in physical terms. Include technical details.
+\item[Task 3.2] Develop / present the nonlinear model of your system
+\item[Task 3.3] Clearly describe system inputs, outputs, and control signals
+\item[Task 3.4] Linearize system model: Show your process and steps of linearization for your chosen system model. Present a linear state-space model and a transfer function model
+\item[Task 3.5] Analysis of the model: Show your initial analysis of the model. Share what properties does it show about the system that you are studying.
+\end{itemize}
+\end{itemize}
+
+\end{document}
