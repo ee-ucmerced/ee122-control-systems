@@ -1,0 +1,236 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{March 19, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 10, Lecture 1: Control Design using Controllable Canonical Form}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Project problem statement out now. First milestone due April 12, 2026.
+\end{itemize}
+\section{Learning Objective}
+\begin{enumerate}
+\item Review the control design problem and how to solve it using state-feedback control. 
+\item Construct the controllable canonical form of a system from its transfer function representation to facilitate state-feedback control design.
+\end{enumerate} 
+
+\section{Review: State-feedback control}
+For a system in state-space form
+\[
+\dot{x}=Ax+Bu, \qquad y=Cx+Du,
+\]
+we are interested in designing the control input \(u(t)\) to achieve some desired behavior for the output \(y(t)\). For example, we may want the output to track a reference signal \(r(t)\) or we may want the system to stabilize at an equilibrium point, or we may want the system to reject disturbances. That is, we want to obtain the ``equation'' for \(u(t)\) that achieves our desired behavior.
+
+\begin{popquiz}
+    If the system is $n$-dimensional and it has $p$ outputs and $m$ inputs, what are the dimensions of $A$, $B$, $C$, and $D$?
+    \popqsplit
+    $A$ is $n \times n$, $B$ is $n \times m$, $C$ is $p \times n$, and $D$ is $p \times m$. 
+\end{popquiz}
+
+\subsection{Second order system example}
+For a second order system transfer function, 
+\[
+G(s) = \frac{Y(s)}{U(s)} = \frac{\omega_n^2}{s^2 + 2\zeta \omega_n s + \omega_n^2},
+\]
+we can write a state-space representation that, we have seen in the previous two lectures, makes it easy to design the controller. Without re-deriving it again, we write the state-space representation as
+\begin{align}
+\dot{x} = \underbrace{\begin{bmatrix}0 & 1\\
+-\omega_n^2 & -2\zeta \omega_n
+\end{bmatrix}}_{A} x + \underbrace{\begin{bmatrix}0\\
+\omega_n^2
+\end{bmatrix}}_{B} u, \qquad y = \underbrace{\begin{bmatrix}1 & 0\end{bmatrix}}_{C} x + \underbrace{0}_{D} u.
+\label{eq:ol_system}
+\end{align}
+This is the open-loop system. We aim to design a controller $u = - Kx$ that ``closes the loop'', that is, using feedback from the state $x$ to compute the control input $u$. The closed-loop system is then
+\begin{align}
+\dot{x} = (A - BK)x, \qquad y = Cx.
+\label{eq:cl_system}
+\end{align}
+The control design problem is to find the gain matrix \(K\) such that the closed-loop system has the desired behavior. For example, if we want the closed-loop system to have a certain settling time and overshoot, we can find the desired closed-loop poles and then find \(K\) such that the eigenvalues of \(A - BK\) are at those desired locations.
+
+The advantage of writing the system in this particular state-space form is that the characteristic polynomial of the system is directly related to the entries of the \(A\) matrix.
+Note that in equation~\eqref{eq:ol_system} the characteristic polynomial of the system is $s^2 + 2\zeta \omega_n s + \omega_n^2$, which is the denominator of the transfer function. The coefficients of the quadratic polynomial are: $a_1 = 2\zeta \omega_n$ and $a_0 = \omega_n^2$. You can see that the $A$ matrix has exactly these coefficients in the second row. Now, when we have $A - BK$ as the closed-loop system matrix, let us obtain what we get. 
+
+For state-feedback controller $u = -Kx$, we have $x \in \mathbb{R}^{n \times 1}$. Since we are studying single input systems, we must have $K \in \mathbb{R}^{1 \times n}$ so that the matrix multiplication $Kx$ is valid and gives us a scalar control input $u$. Since $n = 2$ in our example, we have $K \in \mathbb{R}^{1 \times 2}$. So, we write our controller gain $K$ as 
+\[
+K = \begin{bmatrix}k_1 & k_2\end{bmatrix}.
+\]
+\begin{popquiz}
+What is $BK$?
+\popqsplit
+\[
+BK = \begin{bmatrix}0 & 0\\
+\omega_n^2 k_1 & \omega_n^2 k_2\end{bmatrix}.
+\]
+\end{popquiz}
+Then, the closed-loop system matrix is
+\[
+A - BK = \begin{bmatrix}0 & 1\\
+-\omega_n^2 - \omega_n^2 k_1 & -2\zeta \omega_n - \omega_n^2 k_2\end{bmatrix}.
+\]
+We can immediately connect this back to the characteristic polynomial of the closed-loop system. The characteristic polynomial is given by
+\[
+\det(sI - (A - BK)) = s^2 + (2\zeta \omega_n + \omega_n^2 k_2)s + (\omega_n^2 + \omega_n^2 k_1).
+\]
+We obtain this without solving any determinant or computing any matrix inverse. Further, the most important part is that the effect of control action is clear --- we can see that the control action allows us to achieve any desired characteristic polynomial by choosing the appropriate values of $k_1$ and $k_2$. For example, if we want the closed-loop poles to be at $s = -\alpha \pm j\beta$, then the desired characteristic polynomial is
+\[
+s^2 + 2\alpha s + (\alpha^2 + \beta^2).
+\]
+By comparing the coefficients, we can find the required $k_1$ and $k_2$ to achieve this desired characteristic polynomial. This is the main advantage of writing the system in this particular state-space form, which is called the controllable canonical form. 
+\subsection{Computational approach to control design}
+In MATLAB or Python, we have a simple way to compute the state-feedback gain $K$ that achieves the desired closed-loop poles. We can use the \texttt{place} function in MATLAB\footnote{\url{https://www.mathworks.com/help/control/ref/place.html}} or Python\footnote{\url{https://python-control.readthedocs.io/en/latest/generated/control.place.html}} to find the control gains given the matrices $A$ and $B$ of the open-loop system and the desired closed-loop pole locations. 
+
+Next, we build the controllable canonical form for a general system from its transfer function representation.
+\section{Controllable canonical form}
+Let us consider the most general form of a $n$-th order transfer function
+\[
+G(s) = \frac{Y(s)}{U(s)} = \frac{b_{1} s^{n-1} + b_2 s^{n-2} + \cdots + b_{n-1} s + b_n}{s^n + a_1 s^{n-1} + a_2 s^{n-2} + \cdots + a_{n-1} s + a_n}.
+\]
+\subsection{Write the state-space representation}
+Let us follow the approach that we have seen in the past few lectures --- cross-multiply the transfer function, write the equation in time-domain using inverse Laplace transform, and then manipulate the equation to write it in state-space form. We have
+\[
+(s^n + a_1 s^{n-1} + a_2 s^{n-2} + \cdots + a_{n-1} s + a_n) Y(s) = (b_{1} s^{n-1} + b_2 s^{n-2} + \cdots + b_{n-1} s + b_n) U(s).
+\]
+Taking inverse Laplace transform, we get
+\[
+y^{(n)} + a_1 y^{(n-1)} + a_2 y^{(n-2)} + \cdots + a_{n-1} y' + a_n y = b_{1} u^{(n-1)} + b_2 u^{(n-2)} + \cdots + b_{n-1} u' + b_n u.
+\]
+Here, note that the notation 
+\[
+y^{(n)} = \frac{d^n y}{dt^n}, \qquad u^{(n-1)} = \frac{d^{n-1} u}{dt^{n-1}}, \qquad \text{etc.}
+\]
+Even if we now define the state variables using the outputs and its derivates, we will still have the input derivatives. Note that our goal is to end up with an equation that has $\dot x = Ax + Bu$ without any derivatives of the input. So, this looks like a dead end. Let's try an alternate approach. We write the numerator and denominator separately as
+\[
+\frac{Y(s)}{U(s)} = \frac{N(s)}{D(s)}
+\]
+and then, write
+\[
+Y(s) = N(s) Z(s), \qquad U(s) = D(s) Z(s).
+\]
+where $Z(s)$ is any unknown polynomial in $s$. This is OK to write because you can see that the ratio of output to input, the transfer function, is still the same. We have,
+\[
+Y(s) = b_{1} s^{n-1} Z(s) + b_2 s^{n-2} Z(s) + \cdots + b_{n-1} s Z(s) + b_n Z(s),
+\]
+and 
+\[
+U(s) = s^n Z(s) + a_1 s^{n-1} Z(s) + a_2 s^{n-2} Z(s) + \cdots + a_{n-1} s Z(s) + a_n Z(s).
+\]
+Taking inverse Laplace transform, we get
+\[
+y = b_{1} z^{(n-1)} + b_2 z^{(n-2)} + \cdots + b_{n-1} z' + b_n z,
+\]
+and
+\[
+u = z^{(n)} + a_1 z^{(n-1)} + a_2 z^{(n-2)} + \cdots + a_{n-1} z' + a_n z.
+\]
+
+\subsection{Define state variables}
+The most key step in finding state-space representation is to define the state variables. It is always a good idea to start with something that is simple, see if it works, and then if it does not work, we can try something else. When there is a physical meaning to the system, it is often a good idea to define the state variables based on the physical meaning as it will lead to correct defintions. In the two equations above, we have the output variable $Y(s)$ that depends on $Z(s)$ and its derivatives (since there are terms with $s$ multiplying $Z(s)$). So, let us start with defining the state variables based on $Z(s)$ and its derivatives. 
+
+Note that we must define $n$ state variables, that is, we need to write:
+\begin{align*}
+x_1 &= ? \\
+x_2 &= ? \\
+\vdots \\
+x_n &= ? 
+\end{align*}
+Starting with the output equation, we have $y = b_{1} z^{(n-1)} + b_2 z^{(n-2)} + \cdots + b_{n-1} z' + b_n z$. Similar to the choices before where we have equated the output to the states, let us try the following definition for the first state:
+\[
+x_1 = z^{(n-1)}
+\]
+then, we can define the second state as
+\[
+x_2 = z^{(n-2)}
+\]
+and so on until we define the $n$-th state as
+\[
+x_n = z.
+\]
+With these definitions, we can write the output equation as
+\[
+y = b_{1} x_1 + b_2 x_2 + \cdots + b_{n-1} x_{n-1} + b_n x_n.
+\]
+In matrix form, this gives us 
+\[
+y = \begin{bmatrix}b_1 & b_2 & \cdots & b_{n-1} & b_n\end{bmatrix} \begin{bmatrix}x_1 \\ x_2 \\ \vdots \\ x_{n-1} \\ x_n\end{bmatrix}.
+\]
+So, the matrix $C$ is given by
+\[
+C = \begin{bmatrix}b_1 & b_2 & \cdots & b_{n-1} & b_n\end{bmatrix}.
+\]
+Next, we can write the state equations. We have
+\[
+x_1 = z^{(n-1)}, \qquad x_2 = z^{(n-2)}, \qquad \cdots, \qquad x_n = z.
+\]
+From the input equation, we have
+\[
+u = z^{(n)} + a_1 z^{(n-1)} + a_2 z^{(n-2)} + \cdots + a_{n-1} z' + a_n z.
+\]
+Rearranging this, we get
+\[
+z^{(n)} = u - a_1 z^{(n-1)} - a_2 z^{(n-2)} - \cdots - a_{n-1} z' - a_n z.
+\]
+Substituting the state definitions, we get
+\[
+\dot{x}_1 = u - a_1 x_1 - a_2 x_2 - \cdots - a_{n-1} x_{n-1} - a_n x_n.
+\]
+The state equations can be written in matrix form as
+\[
+\begin{bmatrix}\dot{x}_1 \\ \dot{x}_2 \\ \vdots \\ \dot{x}_{n-1} \\ \dot{x}_n\end{bmatrix} = \begin{bmatrix}
+-a_1 & -a_2 & \cdots & -a_{n-1} & -a_n \\
+1 & 0 & \cdots & 0 & 0 \\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots \\
+0 & 0 & \cdots & 1 & 0
+\end{bmatrix} \begin{bmatrix}x_1 \\ x_2 \\ \vdots \\ x_{n-1} \\ x_n\end{bmatrix} + \begin{bmatrix}1 \\ 0 \\ 0 \\ \vdots \\ 0\end{bmatrix} u.
+\]
+This is the controllable canonical form of the system. The state-space representation is given by
+\[
+\dot{x} = Ax + Bu, \qquad y = Cx + Du,
+\]
+where
+\[
+A = \begin{bmatrix}
+-a_1 & -a_2 & \cdots & -a_{n-1} & -a_n \\
+1 & 0 & \cdots & 0 & 0 \\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots \\
+0 & 0 & \cdots & 1 & 0
+\end{bmatrix}, \qquad B = \begin{bmatrix}1 \\ 0 \\ 0 \\ \vdots \\ 0\end{bmatrix}, 
+\]
+\[ C = \begin{bmatrix}b_1 & b_2 & \cdots & b_{n-1} & b_n\end{bmatrix}, \qquad D = 0.
+\]
+\subsection{Control design using controllable canonical form}
+Now that we have the system in controllable canonical form, we can easily design the state-feedback controller to achieve our desired closed-loop poles.
+
+For the $n$-th order system, the state-feedback controller is given by
+\[
+u = -\begin{bmatrix} k_1 & k_2 & \cdots & k_{n-1} & k_n\end{bmatrix} x.
+\]
+The closed-loop system matrix is given by
+\[
+A - BK = \begin{bmatrix}
+-a_1 - k_1 & -a_2 - k_2 & \cdots & -a_{n-1} - k_{n-1} & -a_n - k_n \\
+1 & 0 & \cdots & 0 & 0 \\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots \\
+0 & 0 & \cdots & 1 & 0
+\end{bmatrix}.
+\]
+This clearly gives us the characteristic polynomial of the closed-loop system as
+\[
+s^n + (a_1 + k_1) s^{n-1} + (a_2 + k_2) s^{n-2} + \cdots + (a_{n-1} + k_{n-1}) s + (a_n + k_n).
+\]
+By choosing the appropriate values of $k_1, k_2, \cdots, k_n$, we can achieve any desired characteristic polynomial and hence any desired closed-loop pole locations. This is the main advantage of writing the system in controllable canonical form --- it allows us to easily design state-feedback controllers to achieve our desired closed-loop behavior.
+
+\subsection{Can we always do this?}
+Not really. We can only do this if the system is controllable. If the system is not controllable, then we cannot place the closed-loop poles arbitrarily and hence we cannot achieve any desired closed-loop behavior. The controllable canonical form is a useful tool for control design, but it is only applicable to controllable systems. We will discuss controllability in more detail in the next lecture.
+
+\end{document}

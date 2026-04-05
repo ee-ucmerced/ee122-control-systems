@@ -1,0 +1,174 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.5in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{EE 122}
+\rhead{In-Class Activity: Designing State-Feedback Controllers}
+\cfoot{\thepage}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+
+\begin{document}
+\footnotesize
+% \begin{center}
+% {\Large In-Class Activity: State-Feedback Control}
+% \end{center}
+
+\textbf{Example 1.} Consider the first-order system
+\[
+\dot{x} = -0.5x + u, \qquad y = 2x.
+\]
+
+\begin{enumerate}[label=\textbf{Task \arabic*.}, leftmargin=*]
+
+\item Write \(A\), \(B\), \(C\), and \(D\) matrices for the system.
+
+\vspace{1.5cm}
+
+\item Note the open-loop pole(s) of the system.
+
+\vspace{0.5cm}
+
+\item Physically, we want the closed-loop output \(y(t)\) to reach \(63\%\) of its final value in \(1\) second when a step input is applied. What is your desired pole?
+
+
+
+\vspace{2.3cm}
+
+\item Find the state-feedback controller $K$ and the feedforward gain \(k_f\)
+\[
+u=-Kx + k_f r
+\]
+that achieves your desired step response.
+
+\vspace{1.8cm}
+
+\end{enumerate}
+
+\textbf{Example 2.} Consider the DC motor transfer function
+\[
+G(s)=\frac{2}{2s+1}.
+\]
+
+\begin{enumerate}[label=\textbf{Task \arabic*.}, leftmargin=*]
+
+\item Write a state-space representation in reachable canonical form.
+
+\vspace{2.4cm}
+
+\item Note down \(A\), \(B\), \(C\), and \(D\).
+
+\vspace{0.8cm}
+
+\item Note the open-loop pole(s) of the system.
+
+\vspace{0.8cm}
+
+\item Physically, we want the closed-loop output \(y(t)\) to reach \(63\%\) of its final value in \(1\) second when a step input is applied. What should the desired pole be?
+
+\textit{Hint:} For a first-order closed-loop system
+\[
+G_{cl}(s)=\frac{b}{s+a},
+\]
+a unit step input gives
+\[
+Y(s)=\frac{b}{s(s+a)},
+\]
+so
+\[
+y(t)=y(\infty)\left(1-e^{-at}\right).
+\]
+
+\vspace{2.3cm}
+
+\item Find the state-feedback controller
+\[
+u=-Kx
+\]
+that achieves your desired pole.
+
+\vspace{1.8cm}
+
+\end{enumerate}
+
+% \newpage
+
+\textbf{Example 3.} Consider the second-order system in reachable canonical form
+\[
+\dot{x}=Ax+Bu,\qquad y=Cx+Du
+\]
+with
+\[
+A=\begin{bmatrix}
+-2 & -13\\
+1 & 0
+\end{bmatrix},
+\qquad
+B=\begin{bmatrix}
+1\\
+0
+\end{bmatrix},
+\qquad
+C=\begin{bmatrix}
+0 & 1
+\end{bmatrix},
+\qquad
+D=0.
+\]
+
+\begin{enumerate}[label=\textbf{Task \arabic*.}, leftmargin=*]
+
+\item Run the open-loop step response in MATLAB:
+\[
+\texttt{step(ss(A,B,C,D))}
+\]
+
+What do you observe about the oscillation frequency of the system?
+
+\vspace{2cm}
+
+\item Note the open-loop poles of the system.
+
+\textit{MATLAB hint:}
+\[
+\texttt{eig(A)}
+\]
+
+\vspace{1.5cm}
+
+\item We want the closed-loop system to have a lower oscillation frequency than the open-loop system. Propose a pair of desired poles.
+
+\vspace{2cm}
+
+\item Use MATLAB to compute the state-feedback gain:
+\[
+\texttt{K = place(A,B,DP)}
+\]
+where \(\texttt{DP}\) is your vector of desired poles.
+
+\vspace{1.5cm}
+
+\item With state feedback \(u=-Kx\), write the closed-loop matrix
+\[
+A_{cl}=A-BK
+\]
+in terms of
+\[
+K=\begin{bmatrix}k_1 & k_2\end{bmatrix}.
+\]
+
+\vspace{2.2cm}
+
+\item Compare the entries of \(A\) and \(A_{cl}\). Which coefficients change under state feedback? How does this connect to what we saw in controller canonical form in class?
+
+\vspace{2.2cm}
+
+
+\end{enumerate}
+
+\end{document}
