@@ -1,0 +1,151 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+
+
+\documentclass{ee122_pset}
+
+% Assignment info
+\author{\rule{3cm}{0.4pt}} % Name placeholder
+\submitdate{\rule{3cm}{0.4pt}} % Submission date placeholder
+\problemset{Problem Set \#8: State-feedback control}
+\renewcommand{\duedate}{April 9, 2026}
+\shorttitle{Problem Set \#8}
+
+\begin{document}
+
+\textbf{Did you know?} EE 122 / ME 141 satisfies the general education ``crossroads'' requirement. So, one of the course learning goals is to be able to demonstrate how concepts from multiple engineering disciplines connect to each other and how to use these concepts to solve complex real-world problems. In this problem set, we put this learning goal at the center stage. The goal is to use concepts of control systems from mechanical and electrical engineering to solve a ecological problem related to predator-prey dynamics.
+\problem{1}
+The predator-prey model is a classic model in ecology that describes the interactions between two species: a predator and its prey. The predator feeds on the prey and grow in population, while on the other hand, the population of the prey increases when there are fewer predators. 
+% \begin{align*}
+
+\textbf{A motivating example:} A greenhouse grower may intentionally introduce ladybugs (predator) to control the population of aphids\footnote{\url{https://en.wikipedia.org/wiki/Aphid}} (prey). We don't want to drive either population to extinction: if the aphids become too numerous, they damage the crop, so we need the predators (ladybugs) to keep their population in check. While on the other hand, if the ladybugs increase in number, they may also damage the crop for their food (as aphids won't be enough). Clearly, we would like to maintain a balance between the two populations. That is, an equilibrium in which the aphid population remains low and the ladybug population remains present.
+
+\textbf{Still not motivated?} This problem set requires you to apply all concepts in the class so far, so in this way, it is a good opportunity to practice and prepare for the final exam. 
+
+A mathematical model of this system is given by the controlled predator-prey model
+\[
+\dot p_1 = p_1(1-p_2),
+\qquad
+\dot p_2 = p_2(p_1-1)+u,
+\]
+where we define
+$p_1(t)$ as the scaled aphid population, and
+$p_2(t)$ as the scaled ladybug population. Further, \(u(t)\) is a control input representing an external intervention in the predator dynamics (think: adding more ladybugs or exterminating them in a controlled manner). In this problem, your goal is to study this system and design a state-feedback controller that tracks a step change in the desired operating level of the prey population. That is, we are going to design a control action that affects the predator population in order to maintain the prey population \(p_1\) at a desired reference level.
+
+\problem{1} The first problem will walk you through the steps to understand the model of the system and prepare the mathematical equations for the control design. 
+
+\problempart \textbf{[5 points]} Find all equilibrium points of the uncontrolled system, that is, set \(u=0\) and solve for all \((p_1^\star,p_2^\star)\) such that
+\[
+\dot p_1=0,
+\qquad
+\dot p_2=0.
+\]
+Identify the biologically meaningful coexistence equilibrium. 
+
+\textbf{Hint:} We don't want both populations to be zero!
+
+\problempart \textbf{[15 points]} Linearize the system about the coexistence equilibrium (that is, the non-zero equilibrium). 
+
+\textbf{Hint:} If your equilibrium point is $(p_1^\star, p_2^\star)$, define the shifted variables
+\[
+z_1=p_1-p_1^\star,
+\qquad
+z_2=p_2-p_2^\star.
+\]
+Then, write the nonlinear system in terms of \(z_1\) and \(z_2\). Then, you will have a system with $(0, 0)$ as the equilibrium point, which corresponds to $(p_1^\star, p_2^\star)$ in the original coordinates. 
+
+Using the shifted nonlinear system, write the linearized model in the form
+\[
+\dot z = Az+Bu,
+\qquad
+y = Cz,
+\]
+where
+\[
+z=\begin{bmatrix}z_1\\ z_2\end{bmatrix}.
+\]
+For the linearized model, you may define the output \(y\) as the deviation in prey population, so that \(y=z_1\). The actual prey population is then \(p_1=p_1^\star+y\).
+\problempart \textbf{[5 points]} Compute the eigenvalues of the open-loop linearized system matrix \(A\). Is the system stable or unstable locally at the equilibrium point that you linearized around?.
+\problem{2} 
+
+Now that we have the linearized model, let us design a state-feedback controller to achieve a desired prey population tracking response from the closed-loop system. For the rest of this problem, define the state vector
+\[
+x=
+\begin{bmatrix}
+z_1\\
+z_2
+\end{bmatrix}.
+\]
+Then the linearized system is
+\[
+\dot x = Ax+Bu,
+\qquad
+y=Cx,
+\]
+with $A$, $B$, and $C$ as derived in the previous problem.
+
+We want to design a state-feedback controller of the form
+\[
+u=-Kx+k_f r.
+\]
+
+We desire the following properties for our closed-loop greenhouse grower system that tracks (is able to achieve) the population of the prey (aphids) at a desired reference level \(r\):
+\begin{itemize}
+    \item it should be asymptotically stable (that is, neither the predator nor the prey population should diverge to infinity),
+    \item for a step response, it should have damping ratio
+    \(
+    \zeta=\frac{1}{\sqrt{2}},
+    \)
+    \item the prey population should reach the desired level within
+    \(
+    T_s \approx 4
+    \)
+    time units. You may set this equal to the 2\% settling time for the closed-loop second-order system.
+\end{itemize}
+
+\problempart \textbf{[10 points]} Compute the desired closed-loop poles that meet the properties above. 
+
+\textbf{Hint:} Use the second-order approximation for the settling time: $T_s \approx \frac{4}{\zeta\omega_n}$, where \(\omega_n\) is the natural frequency of the closed-loop second-order system. 
+\problempart \textbf{[10 points]} Convert the linearized state-space system obtained in the previous problem to controllable canonical form. If you are able to find the controllable canonical form, then report that the system is controllable. 
+
+\textbf{Hint:} You may first derive the transfer function starting from the state-space obtained above. Then, use the ``multiply numerator and denominator by \(Z(s)\)'' method discussed in class to obtain a controllable canonical form realization. This is ofcourse not the only way! In fact, there is a simple matrix transformation that you can try to ``spot by eye'' and write the controllable canonical form. 
+\problempart \textbf{[10 points]} Design a state-feedback controller in controllable canonical form so that the closed-loop poles match the desired poles from the previous part. Then convert the gain back to the original shifted coordinates.
+
+Your final controller should be reported in the form
+\[
+u=-Kx+k_f r.
+\]
+
+\textbf{Hint:} By comparing the characteristic equation of the desired closed-loop system (previous part) to the characteristic equation of the closed-loop system in the controllable canonical form, you can solve for the gain \(K_c\) in the controllable canonical form coordinates. That is, $u = -K_c x_c + k_f r$. Remember that this comparison is immediate from the elements of the $A$ matrix. Then, use the transformation between the original shifted coordinates and the controllable canonical coordinates to convert the gain back to the original shifted coordinates. 
+\problempart \textbf{[10 points]} Compute the feedforward gain \(k_f\) so that the linearized closed-loop system tracks a constant reference \(r\) with zero steady-state error in the output.
+\problempart \textbf{[5 points]} Compute the eigenvalues of the closed-loop linearized system and comment on what you expected from the closed-loop system response.
+\problem{3} Finally, in this problem, we run simulations to verify whether the controller designed using the linearized model achieves the desired performance when applied to the original nonlinear system.
+
+Use the same controller designed in Problem 2. Let the reference input be the small step
+\[
+r(t)=0.1\,u_s(t).
+\]
+Assume zero initial condition in the shifted coordinates for the linear system,
+\[
+x(0)=\begin{bmatrix}0\\0\end{bmatrix},
+\]
+which corresponds to starting the nonlinear system at the coexistence equilibrium (since we shifted by the equilibrium point).
+
+\problempart \textbf{[10 points]} For the linearized closed-loop system, simulate the step response of the output and plot the prey population predicted by the linear model. Recall that for the linearized model, \(y=z_1\), so the actual prey population is
+\[
+p_{1,\mathrm{lin}}(t)=p_1^\star + y(t).
+\]
+
+\textbf{Hint:} In MATLAB or Python, use the \texttt{step} function to simulate the step response of the linearized closed-loop system (after defining the system with the correct matrices). Then, add the equilibrium prey population \(p_1^\star\) to the output to get the actual prey population predicted by the linear model. 
+\problempart \textbf{[20 points]} Apply the same controller to the original nonlinear system and run the simulation of the nonlinear system using an appropriate ODE solver in MATLAB or Python. Plot the linear and nonlinear prey population responses on the same figure. 
+
+Note that since the controller was designed using shifted variables, implement it using the shifted variables but then add the equilibrium point back when showing your results.
+\[
+z_1=p_1-p_1^\star,
+\qquad
+z_2=p_2-p_2^\star.
+\]
+
+Submit your code, the generated plots, and your short reflection on the results.
+\end{document}
