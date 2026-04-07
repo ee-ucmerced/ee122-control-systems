@@ -1,0 +1,350 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{April 1, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 10, Lecture 2: Practice state-feedback control design}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Project problem statement out now. First milestone due April 12, 2026.
+\end{itemize}
+\section{Learning Objective}
+\begin{enumerate}
+    \item Practice the design of state-feedback controllers for 1-D and 2-D systems.
+    \item Connect physical closed-loop behavior to desired poles.
+    \item Understand the role of the feedforward gain \(k_f\) when the goal is reference tracking instead of only regulation.
+\end{enumerate}
+
+In this lecture, we will walk through three examples of state-feedback control design. The main theme in the lecture is that the physics of the system guides our choice of desired poles, which then leads us to the control laws. 
+
+\section{Example 0: first-order step response}
+
+Before starting the examples, we review why the phrase ``reach \(63\%\) of the final value in one time constant'' appears so often in first-order systems. Consider a stable first-order closed-loop transfer function written as
+\[
+G_{cl}(s)=\frac{b}{s+a},
+\qquad a>0.
+\]
+If the reference input is a unit step,
+\[
+R(s)=\frac{1}{s},
+\]
+then the output is
+\[
+Y(s)=G_{cl}(s)R(s)=\frac{b}{s(s+a)}.
+\]
+Using partial fractions, we can write that \[
+\frac{b}{s(s+a)}=\frac{A}{s}+\frac{B}{s+a}
+\]
+which implies
+\[
+b=A(s+a)+Bs.
+\]
+We get that $A=\frac{b}{a}$ and $B=-\frac{b}{a}$. So,
+\[
+Y(s)=\frac{b}{a}\left(\frac{1}{s}-\frac{1}{s+a}\right).
+\]
+Taking the inverse Laplace transform,
+\[
+y(t)=\frac{b}{a}\left(1-e^{-at}\right),
+\]
+and the final value is
+\[
+y(\infty)=\frac{b}{a},
+\]
+so the response can be written as
+\[
+y(t)=y(\infty)\left(1-e^{-at}\right).
+\]
+At the time
+\[
+t=\frac{1}{a},
+\]
+we get
+\[
+y\left(\frac{1}{a}\right)=y(\infty)\left(1-e^{-1}\right)
+\approx 0.63\,y(\infty).
+\]
+This means that for a first-order system with pole at \(-a\), the time constant is \(1/a\), and the output reaches about \(63\%\) of its final value after one time constant.
+
+\begin{popquiz}
+If we want a first-order closed-loop response to reach \(63\%\) of its final value in \(1\) second, what should the closed-loop pole be?
+\popqsplit
+
+Since the time constant must be \(1\), we need
+\[
+\frac{1}{a}=1
+\quad\Longrightarrow\quad
+a=1.
+\]
+Therefore, the desired pole is
+\[
+s=-1.
+\]
+\end{popquiz}
+
+\section{Example 1: first-order system control design}
+
+Consider the first-order system
+\[
+\dot{x}=-0.5x+u,
+\qquad
+y=2x.
+\]
+We use this example to practice both state-feedback design and the derivation of the feedforward gain \(k_f\) for reference tracking.
+
+\subsection*{Step 1: write the state-space matrices}
+
+From the model, we can directly read off
+\[
+A=[-0.5],
+\qquad
+B=[1],
+\qquad
+C=[2],
+\qquad
+D=[0].
+\]
+
+\subsection*{Step 2: identify the open-loop pole}
+
+For this scalar system, the open-loop pole is simply the eigenvalue of \(A\):
+\[
+\lambda_{ol}=-0.5.
+\]
+So the open-loop system is stable, but it is slower than what we want.
+
+\subsection*{Step 3: the system requirement}
+
+We want the closed-loop output \(y(t)\) to reach \(63\%\) of its final value in \(1\) second when a step reference is applied. From the popquiz above, we see that the desired closed-loop pole is
+\[
+\lambda_{cl}=-1.
+\]
+
+\subsection*{Step 4: choose the control law}
+
+Since we want to track a reference, we use
+\[
+u=-Kx+k_f r.
+\]
+Substituting into the plant gives
+\[
+\dot{x}=-0.5x+\left(-Kx+k_f r\right).
+\]
+Therefore,
+\[
+\dot{x}=(-0.5-K)x+k_f r.
+\]
+The closed-loop pole is
+\(
+-0.5-K.
+\)
+To place this pole at \(-1\), we solve
+\(
+-0.5-K=-1.
+\)
+Hence,
+\[
+K=0.5.
+\]
+
+\subsection*{Step 5: derive the feedforward gain $k_f$}
+
+Now we derive \(k_f\) step by step rather than quoting a formula.At steady state for a constant reference \(r\), we have
+\(
+\dot{x}=0.
+\)
+So the closed-loop state equation becomes
+\[
+0=(-0.5-K)x_{ss}+k_f r.
+\]
+The output is
+\[
+y=2x,
+\]
+so perfect tracking requires
+\[
+y_{ss}=r.
+\]
+Since \(y_{ss}=2x_{ss}\), this means
+\[
+2x_{ss}=r
+\quad\Longrightarrow\quad
+x_{ss}=\frac{r}{2}.
+\]
+Substitute this into the steady-state equation:
+\[
+0=(-0.5-K)\frac{r}{2}+k_f r.
+\]
+Assuming \(r\neq 0\), divide by \(r\):
+\[
+0=-\frac{0.5+K}{2}+k_f.
+\]
+Therefore,
+\[
+k_f=\frac{0.5+K}{2}.
+\]
+Using \(K=0.5\), we get
+\[
+k_f=\frac{0.5+0.5}{2}=\frac{1}{2}=0.5.
+\]
+So the controller is
+\[
+u=-0.5x+0.5r.
+\]
+
+\subsection*{Step 6: write the closed-loop system and transfer function}
+
+Substituting \(K=0.5\) and \(k_f=0.5\) into the closed-loop equation gives
+\[
+\dot{x}=-x+0.5r,
+\qquad
+y=2x.
+\]
+Taking Laplace transforms with zero initial conditions,
+\[
+sX(s)=-X(s)+0.5R(s).
+\]
+So
+\[
+(s+1)X(s)=0.5R(s),
+\qquad
+X(s)=\frac{0.5}{s+1}R(s).
+\]
+Since \(y=2x\),
+\[
+Y(s)=2X(s)=\frac{1}{s+1}R(s).
+\]
+Therefore, the closed-loop transfer function from \(r\) to \(y\) is
+\[
+\frac{Y(s)}{R(s)}=\frac{1}{s+1}.
+\]
+This is the first-order form we wanted, with pole at \(-1\)!! All done!
+
+\subsection*{Step 7: sanity check}
+
+For a unit step reference,
+\[
+R(s)=\frac{1}{s}.
+\]
+Hence,
+\[
+Y(s)=\frac{1}{s(s+1)}.
+\]
+Using partial fractions,
+\[
+\frac{1}{s(s+1)}=\frac{1}{s}-\frac{1}{s+1},
+\]
+and taking inverse Laplace transform, we get
+\[
+y(t)=1-e^{-t}.
+\]
+At \(t=1\),
+\[
+y(1)=1-e^{-1}\approx 0.63.
+\]
+So the output reaches about \(63\%\) of its final value at \(1\) second, as required.
+
+\section{Example 2: deriving the reachable/controllable canonical form}
+
+Consider the DC motor transfer function
+\[
+G(s)=\frac{2}{2s+1}.
+\]
+We first rewrite it in a form that makes the pole easier to see:
+\[
+G(s)=\frac{1}{s+0.5}.
+\]
+
+\subsection*{Step 1: write a state-space model in reachable canonical form}
+Use the approach we discussed in class: multiply numerator and denominator by an unknown function \(Z(s)\):
+\[
+G(s)=\frac{1}{s+0.5}=\frac{Z(s
+)}{Z(s)(s+0.5)}.
+\]
+Then, we write $Y(s) = 1 \cdot Z(s)$ and $U(s) = Z(s)(s+0.5)$, which gives
+\[
+Y(s)=Z(s),
+\qquad
+U(s)=Z(s)(s+0.5).
+\]
+Now, let's define the state as
+\[
+x=z
+\]
+so we get,
+\[
+y = x,
+\qquad
+u = \dot x + 0.5 x.
+\]
+Rearranging gives
+\[
+\dot x = -0.5 x + u.
+\]
+Thus, a state-space representation in reachable canonical form is
+\[
+A=[-0.5],
+\qquad
+B=[1],
+\qquad
+C=[1],
+\qquad
+D=[0].
+\]
+
+\subsection*{Step 2: identify the open-loop pole}
+
+Again, for this scalar system, the open-loop pole is
+\[
+\lambda_{ol}=-0.5.
+\]
+
+\subsection*{Step 3: convert the physical requirement into a desired pole}
+
+We want the closed-loop output to reach \(63\%\) of its final value in \(1\) second under a step input. Using the first-order derivation from the beginning of the lecture, the desired pole is
+\[
+\lambda_{cl}=-1.
+\]
+
+
+\subsection*{Step 4: compute the state-feedback gain}
+We get 
+$K=0.5$, same as before. 
+
+\section{Practice problem (take home): second-order system control design}
+
+Consider the second-order system
+\[
+\dot{x}=Ax+Bu,
+\qquad
+y=Cx+Du
+\]
+with
+\[
+A=\begin{bmatrix}
+-2 & -13\\
+1 & 0
+\end{bmatrix},
+\qquad
+B=\begin{bmatrix}
+1\\
+0
+\end{bmatrix},
+\qquad
+C=\begin{bmatrix}
+0 & 1
+\end{bmatrix},
+\qquad
+D=0.
+\]
+Use \(
+\texttt{step(ss(A,B,C,D))}
+\) to plot the step response of the system. Find the open-loop poles and choose desired poles to oscillate more slowly than the open-loop system. Write down  the desired characteristic polynomial, and obtain $K$ by comparing it to the characteristic polynomial of the closed-loop system. 
+\end{document}

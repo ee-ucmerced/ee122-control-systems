@@ -1,0 +1,403 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{April 6, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 11, Lecture 1: Integral augmented state-feedback control}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set \#8 out, due on April 9, 2026 (1-day later than usual).
+\end{itemize}
+\section{Learning Objective}
+\begin{enumerate}
+    \item Understand that the state-feedback tracking problem is sensitive to modeling error, and that feedforward gains can be inaccurate if the model is inaccurate.
+\item How can we achieve perfect tracking (zero steady-state error) in state-feedback control?
+\end{enumerate} 
+
+
+\section{Recap: State-feedback control}
+
+We have studied the following control design problem. For a system in the standard state-space form,
+\[
+\dot x=Ax + Bu,
+\qquad
+y=Cx,
+\]
+where \(x \in \mathbb{R}^n\) is the state, \(u\in \mathbb{R}\) is the input, and \(y(t)\in \mathbb{R}\) is the output. Recall that the matrices are the following dimensions:
+\[
+A\in\mathbb{R}^{n\times n},
+\qquad
+B\in\mathbb{R}^{n\times 1},
+\qquad
+C\in\mathbb{R}^{1\times n}
+\]
+and are assumed known from the model.
+
+\subsection{Disturbance rejection problem}
+When we say that we would like to regulate the state of the system to its equilibrium point. In the given state-space above, the desired operating condition is
+\[
+x \to 0,
+\qquad
+y \to 0,
+\]
+and the control law is chosen as
+\[
+u =-Kx,
+\]
+where
+\[
+K\in \mathbb{R}^{1\times n}.
+\]
+This controller takes the system to the equilibrium point, provided the closed-loop matrix \(A-BK\) has all eigenvalues in the open left half-plane (that is, are with negative real parts). We get the closed-loop system
+\[
+\dot x = Ax +B\bigl(-Kx \bigr)
+=
+(A-BK)x.
+\]
+Therefore, the closed-loop system is
+\[
+\dot x =(A-BK)x ,
+\qquad
+y = Cx.
+\]
+
+The eigenvalues of the matrix \(A-BK\) determine the behavior of the closed-loop system. If the gain \(K\) is chosen so that all eigenvalues of \(A-BK\) have negative real part, the state converges to the origin. That is,
+\[
+x(t)\to 0
+\quad \text{as } t\to\infty.
+\]
+Since the output is
+\[
+y = Cx,
+\]
+it follows that
+\[
+y(t) \to 0
+\quad \text{as } t\to\infty.
+\]
+
+We call this the disturbance rejection problem or the system regulation problem. Our goal is to drive the system back to its equilibrium. A disturbance might move the state away from the desired operating point, and the feedback law acts to drive the state back to that equilibrium. So, we have ``rejected'' the disturbance and returned to the desired operating point.
+
+There is another type of problem that we are usually interested in --- the tracking problem. 
+
+\subsection{State feedback with a reference input}
+
+If the goal is to obtain an output that tracks a constant reference \(r\), we have the reference tracking problem. We again use state feedback, but now include a feedforward term to compensate for the reference. Here's how it works 
+\[
+u =-Kx +k_f r.
+\]
+Here \(k_f\) is a scalar gain placed on the reference signal (see Figure~\ref{fig:state-feedback-tracking}).
+
+Substituting this control law into the plant gives
+\[
+\dot x =Ax +B\bigl(-Kx +k_f r\bigr)
+=
+(A-BK)x+Bk_f r.
+\]
+The closed-loop system becomes
+\[
+\dot x=(A-BK)x+Bk_f r,
+\qquad
+y = Cx.
+\]
+
+The feedback gain \(K\) is still needed to shape the transient dynamics by defining the eigenvalues of the closed-loop matrix \(A-BK\). On the other hand, the role of the feedforward gain \(k_f\) is to achieve
+\[
+y = r.
+\]
+\begin{figure}[t]
+\centering
+
+\begin{tikzpicture}[auto,node distance=1.8cm]
+    \tikzstyle{block} = [draw, rectangle, minimum height=1.0cm, minimum width=1.6cm]
+    \tikzstyle{sum} = [draw, circle, inner sep=0pt, minimum size=5mm]
+    \tikzstyle{input} = [coordinate]
+    \tikzstyle{output} = [coordinate]
+
+    \node[input] (r) {};
+    \node[block, right=0.9cm of r] (kf) {$k_f$};
+    \node[sum, right=1.4cm of kf] (sum) {};
+    \node[block, right=1.8cm of sum, minimum width=2.2cm, minimum height=1.3cm] (sys) {System ($x$)};
+    \node[block, right=1.8cm of sys] (C) {$C$};
+    \node[output, right=1.5cm of C] (y) {};
+
+    \node[block, below=1.8cm of sum, minimum width=1.6cm] (K) {$-K$};
+
+    \draw[->] (r) -- node[pos=0.0, above] {$r$} (kf);
+    \draw[->] (kf) -- (sum);
+    \draw[->] (sum) -- node[midway, above] {$u$} (sys);
+    \draw[->] (sys) -- node[midway, above] {$x$} (C);
+    \draw[->] (C) -- node[midway, above] {$y$} (y);
+
+    \draw[->] ($(sys.east)!0.5!(C.west)$) |- (K.east);
+    \draw[->] (K.north) -| node[pos=0.25, left] {} (sum.south);
+
+    \node at ($(sum)+(0.0,0.04)$) {$+$};
+    % \node at ($(sum)+(0.0,-0.22)$) {$+$};
+\end{tikzpicture}
+\caption{Block diagram of state-feedback control with a reference input.}
+\label{fig:state-feedback-tracking}
+\end{figure}
+
+% In this diagram, the signal \(r\) is scaled by the gain \(k_f\), then combined with the state-feedback term \(-Kx\) to form the control input \(u\). The plant output is obtained from the state through the matrix \(C\). The state \(x\) is also fed back to the gain block \(-K\).
+
+% \subsection{Reference tracking as a design objective}
+
+\subsection{Importance of reference tracking}
+Reference tracking is a common control objective. For a cruise-control system, for example, once you reach a speed and you would like maintain that speed --- that is the regulation problem (the disturbance rejection problem). But, if you would also like to achieve the desired speed in a desired way (let's say, you'd want the vehicle to achieve the desired speed linearly), then you have a ramp tracking problem. That is, $r = t$.     
+
+Similarly, in a cart-pole system that you have experimented with in the lab, keeping the pendulum upright is a regulation problem. The upright position is the equilibrium, and the control objective is to reject disturbances that move the pendulum away from that unstable operating point. At the same time, the cart position may be asked to follow a desired command such as a square wave or a step. That is a reference tracking problem.
+
+The distinction between these two goals is important. Regulation asks the system to return to a fixed equilibrium. Tracking asks the output to approach a prescribed reference. In both cases, the transient behavior is shaped by the closed-loop eigenvalues. However, tracking introduces an additional requirement: the steady-state output must match the desired command.
+
+To derive the feedforward gain \(k_f\), assume that the reference \(r\) is constant and that the closed-loop matrix \(A-BK\) has all its eigenvalues with negative real parts. Then the state approaches a steady-state value \(x_{ss}\) satisfying
+\[
+0=(A-BK)x_{ss}+Bk_f r.
+\]
+Assuming \(A-BK\) is invertible, we obtain
+\[
+x_{ss}=-(A-BK)^{-1}Bk_f r.
+\]
+The corresponding steady-state output is
+\[
+y_{ss}=Cx_{ss}
+=
+-C(A-BK)^{-1}Bk_f r.
+\]
+To enforce perfect tracking of a constant reference, we require
+\[
+y_{ss}=r.
+\]
+Substituting the expression above gives
+\[
+-C(A-BK)^{-1}Bk_f r = r,
+\]
+which then gives the final form
+\[
+-C(A-BK)^{-1}Bk_f = 1.
+\]
+
+This formula shows that the feedforward gain depends directly on the model matrices \(A\), \(B\), and \(C\), as well as on the state-feedback gain \(K\).
+
+\subsection{Role of modeling errors}
+
+There is an important difference between regulation with \(u=-Kx\) and tracking with \(u=-Kx+k_f r\). For the regulation problem, the closed-loop dynamics are
+\(
+\dot x=(A-BK)x.
+\)
+If the actual closed-loop system is stable, then both $x$ and $y$ approach zero. If the chosen gain \(K\) makes the closed-loop eigenvalues have negative real parts, then the state is driven to the equilibrium. The regulation objective is therefore tied directly to the stability of the closed-loop system and it is NOT dependent on the model terms $A$, $B$, and $C$ --- because as long as the eigenvalues of the actual closed-loop system are in the left half-plane, the state will converge to zero even if there were modeling errors in \(A\), \(B\), and \(C\).
+
+For the tracking problem, however, the feedforward gain is computed such that it satisfies
+\[
+-C(A-BK)^{-1}Bk_f = 1.
+\]
+This expression depends explicitly on the matrices in the model. If the model is inaccurate, then the chosen value of \(k_f\) is also inaccurate. As a result, even if the closed-loop system remains stable, the steady-state output need not satisfy
+\[
+y_{ss}=r.
+\]
+Instead, a nonzero steady-state error may remain:
+\[
+e_{ss}=r-y_{ss}\neq 0.
+\]
+
+This is the main sensitivity of feedforward tracking. The closed-loop poles may still be satisfactory, and the transient response may still be well behaved, but the steady-state value is no longer guaranteed to match the reference unless the model used in computing \(k_f\) is sufficiently accurate.
+
+\subsection{Connection with P-only and PI controllers}
+
+We have seen the same issue earlier! It is related to what appears in output-feedback control with proportional control. If the input is chosen as
+\[
+u(t)=k_p e(t),
+\]
+where
+\[
+e(t)=r(t)-y(t),
+\]
+then increasing \(k_p\) can reduce the steady-state error, but in general it does not eliminate it. In many standard examples,
+\[
+e_{ss}\to 0
+\quad \text{only as} \quad
+k_p\to\infty.
+\]
+Such a requirement is not physically reasonable as it is not possible to have an infinitely large gain. There is a similar limitation in feedforward state-feedback tracking. The formula for \(k_f\) can produce zero steady-state error for the model used in the design, but it remains sensitive to model mismatch. Since every linear model is an approximation of the underlying physical system, this sensitivity cannot be ignored! 
+
+When designing controller, we like to have mathematical guarantees of ABSOLUTE zero errors. This is what we did for PI control design and we were able to show mathematically that for any proper transfer function, the steady-state error is zero for a step reference with the PI controller --- a very strong conclusion. We would like to have a similar guarantee for state-feedback control design. This is where integral action comes in.
+
+Let us recall what we saw earlier for the PI controller. To remove the steady-state error in a more robust way, we introduced the integral action. PI control then becomes
+\[
+u(t)=k_p e(t)+k_i\int e(t)\,dt.
+\]
+The integral term accumulates the error over time. Persistent error causes the integral state to grow, which in turn changes the control input until the steady-state error is driven to zero.
+
+\subsubsection{Side note: What is the difference between PI and SFC?}
+There is a structural difference between output-feedback control (this is what you have in PID control, since you are measuring only the output $y$ to design the controller) and state-feedback control. Proportional and proportional-integral control use only the measured output error. State-feedback control uses the full state vector and provides direct freedom to place all closed-loop poles, but it requires access to all states or to an observer that reconstructs them.
+
+\subsection{Integral action in state-feedback control}
+
+To incorporate integral action into the state-feedback framework, define an additional state \(z(t)\) as the integral of the tracking error over time. Using the sign convention
+\[
+\dot z =y -r,
+\]
+we augment the original state vector with this new integral state. So, if we had $n$ states earlier in the system dynamics, we add one more state to it to get the total number of states to be $n+1$. That is, we have
+\[
+\dot x = Ax+Bu,
+\qquad
+y=Cx,
+\]
+and the integral-state dynamics are
+\[
+\dot z = Cx-r.
+\]
+
+So, we define the augmented state
+\[
+\bar x =
+\begin{bmatrix}
+x\\
+z
+\end{bmatrix}.
+\]
+Then the augmented dynamics are
+\[
+\dot{\bar{x}} = \begin{bmatrix}
+\dot x\\
+\dot z
+\end{bmatrix}
+=
+\begin{bmatrix}
+Ax+Bu\\
+Cx-r
+\end{bmatrix}.
+\]
+Writing this in matrix form gives
+\[
+\dot{\bar{x}}
+=
+\underbrace{
+\begin{bmatrix}
+A & 0\\
+C & 0
+\end{bmatrix}}_{\bar{A}}
+\bar{x}
++
+\underbrace{
+\begin{bmatrix}
+B\\
+0
+\end{bmatrix}}_{\bar{B}}u
++
+\underbrace{
+\begin{bmatrix}
+0\\
+-1
+\end{bmatrix}}_{\bar{E}}r.
+\]
+
+We now choose the augmented state-feedback law
+\[
+u=-Kx-k_i z - k_f r,
+\]
+which can be written in terms of the augmented state as
+\[
+\bar{K}=
+\begin{bmatrix}
+K & k_i
+\end{bmatrix},
+\]
+so that we can write the control law in the augmented form as \[
+u=-\bar{K} \bar{x}.
+\]
+
+Substituting this into the augmented dynamics yields
+\[
+\dot{\bar{x}}
+=
+\bar{A}\bar{x} + \bar{B}(-\bar{K} \bar{x})+\bar{E} r
+=
+(\bar{A}-\bar{B}\bar{K})\bar{x}+\bar{E} r.
+\]
+Therefore, the closed-loop augmented system is
+\[
+\dot{\bar{x}}
+=
+\underbrace{
+\left(
+\begin{bmatrix}
+A & 0\\
+C & 0
+\end{bmatrix}
+-
+\begin{bmatrix}
+B\\
+0
+\end{bmatrix}
+\begin{bmatrix}
+K & k_i
+\end{bmatrix}
+\right)}_{\bar{A}_{\mathrm{cl}}}
+\bar{x}
++
+\begin{bmatrix}
+0\\
+-1
+\end{bmatrix}r,
+\]
+or, after multiplying out,
+\[
+\dot{\bar{x}}
+=
+\begin{bmatrix}
+A-BK & -Bk_i\\
+C & 0
+\end{bmatrix}\bar{x}
++
+\begin{bmatrix}
+0\\
+-1
+\end{bmatrix}r.
+\]
+\subsection{Is the augmented system controllable?}
+If the augmented pair \((\bar{A},\bar{B})\) is controllable, then the augmented gain
+\[
+\bar{K}=
+\begin{bmatrix}
+K & k_i
+\end{bmatrix}
+\]
+can be chosen (using pole placement) in the controllable canonical form. So the augmented closed-loop matrix
+\[
+\bar{A}_{\mathrm{cl}}
+=
+\begin{bmatrix}
+A-BK & -Bk_i\\
+C & 0
+\end{bmatrix}
+\]
+has all its eigenvalues with negative real parts. So, finally, we can conclude that for a constant reference \(r\), the augmented state then converges to an equilibrium, which gives us the desired tracking performance. To see this, note that at the equilibrium point, we have
+\[
+\dot z = 0.
+\]
+Since
+\[
+\dot z = y-r,
+\]
+it follows that
+\[
+0=y_{ss}-r,
+\]
+and therefore
+\[
+y_{ss}=r.
+\]
+
+This is the key benefit of adding integral action to state feedback. The integral state forces the steady-state error to zero for a constant reference, provided the augmented closed-loop system is stable.
+
+\section{Next steps}
+We will talk about optimal control design using the Linear Quadratic Regulator (LQR) in the next lecture. 
+\end{document}

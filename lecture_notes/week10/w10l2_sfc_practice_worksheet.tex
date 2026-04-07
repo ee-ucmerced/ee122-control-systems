@@ -1,23 +1,17 @@
-\documentclass[11pt]{article}
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{April 1, 2026}
 
-\usepackage[margin=0.5in]{geometry}
-\usepackage{amsmath,amssymb}
-\usepackage{enumitem}
-\usepackage{fancyhdr}
-
-\pagestyle{fancy}
-\fancyhf{}
-\lhead{EE 122}
-\rhead{In-Class Activity: Designing State-Feedback Controllers}
-\cfoot{\thepage}
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{0.4em}
 
 \begin{document}
-\footnotesize
-% \begin{center}
-% {\Large In-Class Activity: State-Feedback Control}
-% \end{center}
+\section*{EE 122/ME 141 Week 10, Lecture 2: Examples of state-feedback control design}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+
 
 \textbf{Example 1.} Consider the first-order system
 \[
