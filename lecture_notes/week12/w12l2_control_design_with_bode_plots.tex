@@ -1,0 +1,119 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{April 15, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 12, Lecture 2: Analysis of control design with Bode plots}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set \#9 due April 15, 2026.
+    \item Problem set \#10 will be out soon and will be due on April 22, 2026.
+\end{itemize}
+\section{Learning Objective}
+By the end of this lecture, you should be able to:
+\begin{enumerate}
+    \item Analyze the frequency response of a system and control designs using Bode plots
+    \item Appreciate how Bode plots can be shaped by controllers
+\end{enumerate}
+\section{Example: In-class activity}
+Consider the following open-loop plant:
+\[
+G(s) = \frac{5}{s+2}.
+\]
+Sketch the Bode magnitude plot for the transfer function above by following the steps from the previous lecture. 
+\subsection{Computing the system gain}
+Write $G(j\omega)$:
+\[
+G(j\omega) = \frac{5}{j\omega + 2}.
+\]
+Step 1: Write $G(j\omega)$ as a complex number in the form $a + jb$:
+\[
+G(j\omega) = \frac{5}{2 + j\omega} = \frac{5(2 - j\omega)}{(2 + j\omega)(2 - j\omega)} = \frac{10 - 5j\omega}{4 + \omega^2} = \frac{10}{4 + \omega^2} + j\frac{-5\omega}{4 + \omega^2}.
+\]
+Step 2: Compute the magnitude of $G(j\omega)$:
+\[
+|G(j\omega)| = \sqrt{\left(\frac{10}{4 + \omega^2}\right)^2 + \left(\frac{-5\omega}{4 + \omega^2}\right)^2} = \frac{5}{\sqrt{4 + \omega^2}}.
+\]
+Step 3: Compute the magnitude in decibels:
+\[
+20\log_{10}(|G(j\omega)|) = 20\log_{10}\left(\frac{5}{\sqrt{4 + \omega^2}}\right) = 20\log_{10}(5) - 10\log_{10}(4 + \omega^2).
+\]
+\subsection{Sketching the Bode plot}
+To sketch, first compute the magnitude at $\omega = 0$:
+\[
+20\log_{10}(|G(j0)|) = 20\log_{10}\left(\frac{5}{\sqrt{4}}\right) = 20\log_{10}\left(\frac{5}{2}\right) \approx 7.96 \text{ dB}.
+\]
+Next, observe that as $\omega \to \infty$, the magnitude approaches $-\infty$ dB. The plot will start at approximately 7.96 dB at $\omega = 0$ and will decrease as $\omega$ increases. 
+
+Now, does it remain flat? suddenly decrease? Let us find the value at a frequency very close to the DC gain, say $\omega = 0.1 = 10^{-1}$:
+\[
+20\log_{10}(|G(j0.1)|) = 20\log_{10}\left(\frac{5}{\sqrt{4 + 0.01}}\right) \approx 7.92 \text{ dB}.
+\]
+You can see that it remains quite close to the DC gain at $\omega = 0.1$. Now, let us find the value at $\omega = 2$:
+\[
+20\log_{10}(|G(j2)|) = 20\log_{10}\left(\frac{5}{\sqrt{4 + 4}}\right) = 20\log_{10}\left(\frac{5}{\sqrt{8}}\right) \approx 4.95 \text{ dB}.
+\]
+This is a significant drop from the DC gain. 
+\subsection{Bandwidth}
+The bandwidth of the system is the frequency at which the magnitude drops by 3 dB from the DC gain. In other words, it is the value of the frequency $\omega_B$ such that:
+\[
+20\log_{10}(|G(j\omega_B)|) = 20\log_{10}(|G(j0)|) - 3 \text{ dB}.
+\]
+In non-logarithmic terms, this is the point at which the magnitude is $\frac{1}{\sqrt{2}}$ times the DC gain.
+
+\begin{popquiz}
+Prove to yourself that a 3 dB drop corresponds to a magnitude that is $\frac{1}{\sqrt{2}}$ times the DC gain. 
+\popqsplit
+Simply compute $20\log_{10}\left(\frac{1}{\sqrt{2}}\right)$ and show that it equals -3 dB.
+\end{popquiz}
+By observation, we can see that the bandwidth $\omega_B$ is 2 rad/s, since the magnitude drops by 3 dB at $\omega = 2$ compared to the DC gain.
+So, now we have the Bode plot for the open-loop plant $G(s)$. Next, we will design a P-only controller and analyze the closed-loop system using Bode plots.
+\section{Control design with Bode plots}
+Consider a P-only controller with gain $k_p$:
+\[
+C(s) = k_p.
+\]
+The closed-loop transfer function is given by:
+\[
+T(s) = \frac{G(s)C(s)}{1 + G(s)C(s)} = \frac{\frac{5k_p}{s+2}}{1 + \frac{5k_p}{s+2}} = \frac{5k_p}{s + 2 + 5k_p}.
+\]
+Now, we can analyze the closed-loop system using Bode plots. The closed-loop transfer function $T(s)$ has a similar form to the open-loop plant $G(s)$, but with a different gain and a different pole location.
+The DC gain of the closed-loop system is:
+\[
+|T(j0)| = \frac{5k_p}{2 + 5k_p}.
+\]
+The gain of the closed-loop system can be written as 
+\[
+|T(j\omega)| = \frac{5k_p}{\sqrt{(2 + 5k_p)^2 + \omega^2}}.
+\]
+Note that the DC gain of the system now is equal to $\frac{5k_p}{2 + 5k_p}$, which is less than the DC gain of the open-loop plant $G(s)$, which is $\frac{5}{2}$. This is because the closed-loop system has feedback, which reduces the gain at low frequencies.
+
+The closed-loop transfer function is a ratio of the output to the reference input. If the DC gain in decibels is negative, it means that the output is smaller than the reference input at low frequencies. This means that we are not able to track the reference input well at low frequencies, which is a common issue with P-only controllers (recall Week 4). Let us look at the PI controller.
+\subsection{PI controller}
+Consider a PI controller with gain $k_p$ and integral gain $k_i$:
+\[
+C(s) = k_p + \frac{k_i}{s}.
+\]
+The closed-loop transfer function is given by:
+\[
+T(s) = \frac{G(s)C(s)}{1 + G(s)C(s)} = \frac{\frac{5(k_p + \frac{k_i}{s})}{s+2}}{1 + \frac{5(k_p + \frac{k_i}{s})}{s+2}} = \frac{5(k_p s + k_i)}{s^2 + (2 + 5k_p)s + 5k_i}.
+\]
+Let us write the closed-loop frequency response so that we can then sketch the Bode plot. The closed-loop frequency response is:
+\[
+T(j\omega) = \frac{5(k_p j\omega + k_i)}{-\omega^2 + j(2 + 5k_p)\omega + 5k_i}.
+\]
+Now we can find the DC gain of the closed-loop system by evaluating $T(0)$ 
+\[
+T(0) = \frac{5k_i}{5k_i} = 1.
+\]
+Clearly, we can track the reference input well at low frequencies with a PI controller, which is an improvement over the P-only controller. 
+\section{Next steps}
+We will study loop shaping --- a concept that allows us to design controllers by shaping the Bode plot of the open-loop transfer function.
+\end{document}
