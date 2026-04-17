@@ -1,0 +1,105 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{April 13, 2026}
+
+
+\begin{document}
+\section*{EE 122/ME 141 Week 12, Lecture 1: Introduction to Bode Plots}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set \#9 due on April 15, 2026 
+    \item Project milestone \#2 on designing a controller due on April 26 (Sunday) at 11:59 PM.
+\end{itemize}
+\section{Learning Objective}
+The content of this lecture notes is from Section 9.6 from the textbook. By the end of this lecture, you should be able to:
+\begin{enumerate}
+    \item Understand gain and phase of a complex number
+    \item Compute the gain and phase of a transfer function
+    \item Sketch the Bode magnitude and phase plots for a transfer function
+\end{enumerate}
+\section{The course so far}
+We started this course with a general introduction to control systems and set the ground for the need for studying control design. We spent the first 3-4 weeks on understanding various kinds of system models --- ODEs, state-space, transfer functions, and the response of systems (and how to compute these). Starting with Week 4, we discussed the most popular type of controller --- the PID controller. In Week 6, we formalized the notion of stability, equilibrium point, and moved on to obtaining linearized model representations from nonlinear equations in Week 7. The linearization process sets up the system model in state-space. So, we spent Weeks 8-11 on various control design techniques using state-space representations --- pole placement, state-feedback, integral-augmented state-feedback, and optimal control. 
+
+In the next two weeks, we will pivot back to the frequency-domain to understand how control design can be done in the frequency domain. Both time-domain and frequency domain techniques are important and have their own advantages and disadvantages. Towards frequency-domain control design, we will first learn how to compute the gain and phase of a transfer function and how to ``visualize the system frequency response'' and how these visuals help us with control design.
+\section{Review: Transfer functions}
+Recall that transfer function of a system is the ratio of the Laplace transform of the output to the Laplace transform of the input, assuming zero initial conditions. The transfer function is a complex-valued function of the complex variable \(s\). Although various computational techniques are simpler in the frequency domain, the variable $s$ remains enigmatic --- what does it \textit{really} represent? Complex numbers are hard to grasp! This is where the main topic for the week comes in --- visualizing the transfer function using Bode plots. Let us start with a simple example of a transfer function. Consider the first-order system with transfer function
+\[
+G(s) = \frac{K}{s\tau + 1}.
+\]
+Refresh your understanding by solving the following pop-quiz.
+\begin{popquiz}
+What is the DC gain of the system? In your own words, describe what the DC gain represents in terms of the system response.
+\popqsplit 
+The DC gain of the system is given by evaluating the transfer function at \(s=0\). Here, we have the DC gain equal to \(G(0) = \frac{K}{1} = K\). The DC gain represents the steady-state gain of the system when subjected to a constant input. In other words, it indicates how much the output will eventually settle in response to a step input of magnitude 1. A higher DC gain means that the system will have a larger steady-state output for a given constant input, while a lower DC gain indicates a smaller steady-state output.
+\end{popquiz}
+In terms of getting something ``real'' out of a transfer function, the DC gain has been our limit so far. The other interpretations we have been using for the transfer function are the pole locations, which are quite abstract and mathematical (they do give us quite useful practical insights though!). We have discussed how the system responds to constant inputs (that is, DC inputs). So, to get further insights, let us start by considering the following question: ``how does the system respond to signals of different frequencies?''. 
+\section{Frequency response of a system}
+To study the frequency response of the system, that is, to study how the system responds to signals of different frequencies, we can evaluate the transfer function at \(s = j\omega\), where \(\omega\) is the frequency of interest. 
+\subsection{Why $s = j\omega$ for frequency response?}
+Note that $s = \sigma + j\omega$. That is the complex variable $s$. It has a real part $\sigma$ and an imaginary part $j\omega$. The transfer function, with the variable $s$ is a general model of the system to the complex variable $s$ --- what does this mean? Any complex number is an encoding of two dimensions --- the real part and the imaginary part. So, when we write the transfer function as a function of $s$, we are essentially encoding the system response in two dimensions. The real part $\sigma$ can be thought of as representing the exponential growth or decay of the system response, while the imaginary part $j\omega$ represents the oscillatory behavior of the system response --- the behavior / response of the system to different pure sinusoidal inputs. So, when we evaluate the transfer function at $s = j\omega$, we are essentially looking at the system response to pure sinusoidal inputs of different frequencies $\omega$. 
+
+\subsection{The frequency response of the system}
+By substituting \(s = j\omega\) into the transfer function, we can compute the frequency response of the system. For our example, we have
+\[
+G(j\omega) = \frac{K}{j\omega\tau + 1}.
+\]
+
+\paragraph{Interesting tidbit for electrical engineers:}
+For students who have taken EE 102, signal processing, you can connect this to the Fourier transform of the impulse response of the system: the $H(j\omega)$. Indeed, the previous discussion should be now be obvious to you, in hindsight --- by substituting $s = j\omega$, we are going back to the more specific case of the Fourier transform, from the Laplace transform (which is more general, since it is applicable to a wider class of signals, including those that grow or decay exponentially) --- recall Week 1 of this class!
+
+\section{Bode plots}
+Once you have the frequency response of the system, understanding the Bode plot is straightforward. The key idea is that $G(j\omega)$ is complex. So, we cannot visualize or connect it to real-world as easily. Recall that for any complex number \(z = x + jy\), we can compute the absolute value of the complex number as \(|z| = \sqrt{x^2 + y^2}\) and the angle of the complex number as \(\angle z = \arctan\left(\frac{y}{x}\right)\), also known as the argument of the complex number. So, for the frequency response, we have two \textbf{real} quantities\footnote{pun intended: it is real in the sense that it is a real number, not a complex number, and also real because this is the computation that allows is to connect the complex frequency response to real-world quantities that we can understand and visualize.}: the gain of the frequency response, $|G(j\omega)|$, and the phase of the frequency response, \(\angle G(j\omega)\). The Bode plot is a way to visualize these two quantities as a function of frequency $\omega$.
+
+The Bode plot consists of two plots: the Bode magnitude plot, which plots \(20\log_{10}(|G(j\omega)|)\) versus \(\omega\) on a logarithmic scale, and the Bode phase plot, which plots \(\angle G(j\omega)\) versus \(\omega\) on a logarithmic scale. The logarithmic scale for frequency is used because it allows us to visualize a wide range of frequencies in a compact way. We assign the gain in decibels (dB) by taking \(20\log_{10}(|G(j\omega)|)\) because it allows us to easily compare gains and also because it converts multiplication of gains into addition, which is easier to work with when analyzing the system response. 
+
+\section{Example: Bode plot for a first-order system}
+\subsection{First: write the frequency response}
+Let us compute the gain and phase of the frequency response for our example system with transfer function \(G(s) = \frac{K}{s\tau + 1}\). By substituting \(s = j\omega\), we have
+\[
+G(j\omega) = \frac{K}{j\omega\tau + 1}.
+\]
+\subsection{Second: write $G(j\omega)$ as a complex number in the form $x + jy$}
+To do this second step, recall the following mathematical trick: by multiplying a complex number by its conjugate we get a real number (the square of the absolute value). Try this:
+\begin{popquiz}
+For a complex number \(z = 2 + 4j\), what is the complex conjugate of \(z\)? That is, what is \(\bar{z}\)? What is the product \(z\bar{z}\)? What is the absolute value of \(z\)?
+\popqsplit
+The complex conjugate of \(z = 2 + 4j\) is \(\bar{z} = 2 - 4j\). The product \(z\bar{z}\) is given by:
+\[
+z\bar{z} = (2 + 4j)(2 - 4j) = 2^2 - (4j)^2 = 4 + 16 = 20.
+\]
+The absolute value of \(z\) is given by:
+\[
+|z| = \sqrt{z\bar{z}} = \sqrt{20} = 2\sqrt{5}.
+\]
+\end{popquiz}
+To write \(G(j\omega)\) in the form \(x + jy\), we can multiply the numerator and denominator by the complex conjugate of the denominator --- this will make the denominator real and allow us to separate the real and imaginary parts of the expression from the numerator. The complex conjugate of the denominator \(j\omega\tau + 1\) is \(-j\omega\tau + 1\). So, we have
+\[
+G(j\omega) = \frac{K}{j\omega\tau + 1} \cdot \frac{-j\omega\tau + 1}{-j\omega\tau + 1} = \frac{K(-j\omega\tau + 1)}{(j\omega\tau + 1)(-j\omega\tau + 1)}.
+\]
+Now, we can simplify the denominator using the same trick as in the pop-quiz above:
+\[
+(j\omega\tau + 1)(-j\omega\tau + 1) = 1 - (j\omega\tau)^2 = 1 + \omega^2\tau^2.
+\]
+Therefore, we have
+\[
+G(j\omega) = \frac{K(-j\omega\tau + 1)}{1 + \omega^2\tau^2} = \frac{K}{1 + \omega^2\tau^2} - j\frac{K\omega\tau}{1 + \omega^2\tau^2}.
+\]
+\subsection{Third: compute the gain and phase}
+Now that we have \(G(j\omega)\) in the form \(x + jy\), we can compute the gain and phase. The gain is given by
+\[
+|G(j\omega)| = \sqrt{\left(\frac{K}{1 + \omega^2\tau^2}\right)^2 + \left(-\frac{K\omega\tau}{1 + \omega^2\tau^2}\right)^2} = \frac{K}{\sqrt{1 + \omega^2\tau^2}}.
+\]
+The phase is given by
+\[
+\angle G(j\omega) = \arctan\left(\frac{-\frac{K\omega\tau}{1 + \omega^2\tau^2}}{\frac{K}{1 + \omega^2\tau^2}}\right) = \arctan(-\omega\tau).
+\] 
+\subsection{Fourth: sketch the Bode plots}
+Now that we have the gain and phase as functions of frequency $\omega$, we can sketch the Bode magnitude and phase plots. The Bode magnitude plot will plot \(20\log_{10}\left(\frac{K}{\sqrt{1 + \omega^2\tau^2}}\right)\) versus \(\omega\) on a logarithmic scale, and the Bode phase plot will plot \(\arctan(-\omega\tau)\) versus \(\omega\) on a logarithmic scale. Try to create these polots using Desmos or MATLAB or Python.
+\section{Next steps: effect of controller design on Bode plots}
+\end{document}
