@@ -1,0 +1,147 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+\documentclass{ee122_notes}
+\input{macros.tex}
+\input{preamble.tex}
+\renewcommand{\releasedate}{April 22, 2026}
+\begin{document}
+\section*{EE 122/ME 141 Week 13, Lecture 2: Loop shaping-based controller design}
+\subsection*{Instructor: \instructor}
+\subsection*{Date: \releasedate}
+\section{Announcements}
+\begin{itemize}
+    \item Problem set \#10 due on April 22, 2026 
+    \item Problem set \#11 due on April 29, 2026 (last regular problem set)
+    \item Problem set \#12 will be practice for the final exam.
+    \item Project milestone \#2 on designing a controller due on April 26 (Sunday) at 11:59 PM.
+    \item Final project paper due on May 6, 2026 at 11:59 PM.
+    \item Final exam on May 12 (Tuesday) --- will cover all material in this course, 90 minute in-person exam.
+\end{itemize}
+\section{Learning Objectives}
+By the end of this lecture, you should be able to:
+\begin{itemize}
+    \item Understand how to use approximate Bode plots to analyze the frequency response of a system.
+    \item Apply loop shaping techniques to design controllers that achieve desired performance specifications.
+\end{itemize}
+\section{Loop shaping-based controller design}
+Consider a standard block diagram of a feedback control system, as shown in Figure~\ref{fig:block-diagram}.
+\begin{figure}[h]
+  \centering
+  \begin{blockdiagram}
+    \reference{$r(t)$}
+    \controller[$C(s)$]{$e(t)$}{$u(t)$}
+    \system[$G(s)$]{}{$y(t)$}
+    % \feedback[]{$y_m(t)$}
+  \end{blockdiagram}
+  \caption{A standard feedback control system.}
+  \label{fig:block-diagram}
+  \end{figure}
+  Recall that the loop transfer function of this system $L(s) = C(s)G(s)$ determines the closed-loop performance and the error performance. This is because the closed-loop transfer function from the reference input $r(t)$ to the output $y(t)$ is given by
+\[
+T(s) = \frac{C(s)G(s)}{1 + C(s)G(s)} = \frac{L(s)}{1 + L(s)}
+\]
+and the error transfer function from the reference input $r(t)$ to the error signal $e(t)$ is given by
+\[  
+E(s) = \frac{1}{1 + C(s)G(s)} = \frac{1}{1 + L(s)},
+\]
+this is also called the sensitivity function of the system. Therefore, by shaping the loop transfer function $L(s)$, we can achieve desired closed-loop performance and error performance. This is the main idea behind loop shaping-based controller design.
+
+\section{Example}
+Let us consider the following second-order system:
+\[
+G(s) = \frac{5}{s(s + 2)}.
+\]
+We can apply the approximate Bode plot techniques that we learned in the previous lecture to sketch a Bode plot.
+
+\begin{popquiz}
+What is the DC gain of the open-loop system $L(s) = C(s)G(s)$ if we choose $C(s) = 1$?
+\popqsplit 
+Since $C(s) = 1$, we have $L(s) = G(s)$. The DC gain of the open-loop system is $L(0) = G(0) = \frac{5}{0 \cdot (0 + 2)} = \infty$.
+\end{popquiz}
+
+The first pole of the system is at $s = 0$ and the second pole is at $s = -2$. So, by applying the rule of thumb for the poles, we get that, initially, the slope will be $-20 \text{ dB/decade}$ due to the pole at $s = 0$, and then, after the frequency $\omega = 2$, the slope will change to $-40 \text{ dB/decade}$ due to the second pole at $s = -2$. The gain at low frequencies will be very high due to the pole at $s = 0$ --- when sketching, we start at a frequency value that is higher than 0, say $\omega = 0.1$, and we can compute the gain at that frequency. In this baseline case, let us analyze the loop behavior at two important frequencies: $\omega = 1$ and $\omega = 377$ (which corresponds to 60 Hz AC input frequency). 
+
+Let us find the gain of the system in decibels. We have the frequency response
+\[
+G(j\omega) = \frac{5}{j\omega (j\omega + 2)},
+\]
+so the magnitude of the frequency response is given by
+\[
+|G(j\omega)| = \frac{5}{\sqrt{\omega^2 + 0^2} \cdot \sqrt{\omega^2 + 2^2}} = \frac{5}{\omega \cdot \sqrt{\omega^2 + 4}} = \frac{5}{\omega\sqrt{(\omega^2 + 4)}} = \frac{5}{\omega \sqrt{\omega^2 + 4}}.
+\] 
+In decibels, the gain is given by
+\[
+|G|_{dB} = 20 \log_{10} |G(j\omega)| = 20 \log_{10} \left(\frac{5}{\omega\sqrt{\omega^2 + 4}}\right).
+\] 
+So, at $\omega = 1$, we have
+\[
+|G|_{dB} = 20 \log_{10} \left(\frac{5}{\sqrt{1^4 + 4 \cdot 1^2}}\right) = 20 \log_{10} \left(\frac{5}{\sqrt{5}}\right) = 20 \log_{10} \left(\sqrt{5}\right) = 10 \log_{10} 5 \approx 6.99 \text{ dB}.
+\]
+At $\omega = 377$, we have
+\[
+|G|_{dB} = 20 \log_{10} \left(\frac{5}{\sqrt{377^4 + 4 \cdot 377^2}}\right) \approx -80.04 \text{ dB}.
+\]
+
+\subsection{Design goals}
+From a practical perspective, you might want to expect a higher gain at or below the AC frequency $\omega = 377$ to ensure that the system can track the AC input signal well. So, one of the design goals for our controller design will be to increase the gain at $\omega = 377$ from $-80.04$ dB to, say, $-20$ dB. Another design goal could be to ensure that the gain at low frequencies is not too high, say, less than $10$ dB, to avoid amplifying low-frequency noise in the system. We can achieve these \textit{very practical} goals by directly shaping the loop! Note how this approach is different from previous control design approaches where the main bottleneck was to figure out the locations of the desired closed-loop poles --- an abstract notion! But here we have quite a practical picture of what we want to achieve in the frequency domain, and we can directly shape the loop to achieve these goals. Let us apply loop shaping techniques to design a lead-lag controller that achieves these design goals. 
+
+\section{Lead-lag controller design}
+To motivate the idea of this new type of control design, first consider the simple integrator controller $C(s) = \frac{K}{s}$. For this controller, the frequency response is given by
+\[
+C(j\omega) = \frac{K}{j\omega} = \frac{-jK}{\omega} 
+\]
+so, the magnitude $|C(j\omega)|$ is given by
+\[
+|C(j\omega)| = \frac{K}{\omega}.
+\]
+and the phase $\angle C(j\omega)$ is given by
+\[
+\angle C(j\omega) = \tan ^{-1} \left(\frac{-K/\omega}{0}\right) = -\frac{\pi}{2}.
+\]
+This is a ``lag'' element --- it has a negative phase shift of $-90$ degrees. 
+
+On the other hand, consider a controller with one zero $C(s) = s + b$. For this controller, the frequency response is given by
+\[
+C(j\omega) = j\omega + b,
+\]
+so, the magnitude $|C(j\omega)|$ is given by
+\[
+|C(j\omega)| = \sqrt{\omega^2 + b^2},
+\]
+and the phase $\angle C(j\omega)$ is given by
+\[
+\angle C(j\omega) = \tan^{-1} \left(\frac{\omega}{b}\right).
+\]
+Since the phase is positive, this is a ``lead'' element. So, by combining the lead and lag elements, we can design a lead-lag controller that can achieve the desired gain and phase characteristics in the frequency domain.
+
+\subsection{Lead-lag controller design}
+A lead-lag controller has the following form:
+\[
+C(s) = K \frac{s + z_1}{s + p_1},
+\]
+where $z_1$ is the zero of the controller and $p_1$ is the pole of the controller. Now we can study the following cases to understand the impact of the lead-lag controller on the system.
+
+\paragraph{Case 1: $z_1 < p_1$}
+Here, we have 
+
+\[ L(s) = C(s)G(s) = K \frac{s + z_1}{s + p_1} \frac{5}{s(s + 2)} \]
+so we have the following characteristics in the Bode plot for the loop gain:
+\begin{itemize}
+    \item At low frequencies, the slope will be $-20$ dB/decade due to the pole at $s = 0$.
+    \item At $\omega = z_1 < 2$, the slope will change by $+20$ dB/decade due to the zero --- this makes the Bode plot become flat! Or, if $z_1 > 2$ then, due to the pole at 2 that appears first, the slope will change by $-20$ dB/decade and then, at $\omega = z_1$, the slope will change by $+20$ dB/decade and the Bode plot will have a slope of $-20$ dB/decade again. This is very useful because we are able to control the slope of the Bode plot by choosing the location of the zero $z_1$.
+    \item At $\omega = p_1$, the slope will change by $-20$ dB/decade due to the pole --- this makes the Bode plot become steeper!
+\end{itemize}
+By choosing the values of $z_1$ and $p_1$, we can shape the loop gain to achieve the desired performance specifications. For example, if we want to increase the gain at $\omega = 377$ from $-80.04$ dB to $-20$ dB, we can choose $z_1 < 2$ so that the slope of the Bode plot becomes flat for a while before it starts to decrease again, which will increase the gain at $\omega = 377$. On the other hand, if we want to ensure that the gain at low frequencies is not too high, we can choose $p_1$ to be close to the origin so that the slope of the Bode plot becomes steeper at low frequencies, which will decrease the gain at low frequencies. Due to these characteristics, \textbf{this case represents the lead controller --- it adds a lead element (phase and positive slope in magnitude) to the system}.
+\paragraph{Case 2: $z_1 > p_1$}
+Similarly, we can analyze the characteristics of the Bode plot for this case. We have
+\[ L(s) = C(s)G(s) = K \frac{s + z_1}{s + p_1} \frac{5}{s(s + 2)} \]
+so we have the following characteristics in the Bode plot for the loop gain:    
+\begin{itemize}
+    \item At low frequencies, the slope will be $-20$ dB/decade due to the pole at $s = 0$.
+    \item At $\omega = p_1 < z_1$, the slope will change by $-20$ dB/decade due to the pole --- this makes the Bode plot become steeper and it decreases at $-40$ dB/decade.
+    \item At $\omega = z_1$, the slope will change by $+20$ dB/decade due to the zero --- this makes the Bode plot become less steep (but much later when the zero appears) and it decreases at $-20$ dB/decade again.
+\end{itemize}
+By choosing the values of $z_1$ and $p_1$, we can shape the loop gain to achieve the desired performance specifications.
+\end{document}
+
