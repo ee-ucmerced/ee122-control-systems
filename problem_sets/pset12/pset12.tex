@@ -1,0 +1,46 @@
+\makeatletter
+\def\input@path{{../styles/}{../../styles/}{../../../styles/}{../}{../../}{../../../}}
+\makeatother
+
+
+\documentclass{ee122_pset}
+
+% Assignment info
+\author{\rule{3cm}{0.4pt}} % Name placeholder
+\submitdate{\rule{3cm}{0.4pt}} % Submission date placeholder
+\problemset{Problem Set \#12: Practice Final Exam}
+\renewcommand{\duedate}{May 6, 2026}
+\shorttitle{Problem Set \#12}
+
+\begin{document}
+\problem{1}
+For a system modeled as 
+\[ \frac{dx}{dt} = ax + u \]
+where $a$ is a constant and $u$ is the control input, answer the following questions:
+\problempart [5 points] What is the order of the system? How many states does it have?
+\problempart [5 points] Is the system stable for all values of $a$? If not, for which values of $a$ is the system unstable?
+\problempart [10 points] Design a state feedback controller $u = -Kx$ that stabilizes the system for any value of $a$. What is the range of values for $K$ that achieves this stabilization?
+\problempart [5 points] Derive the closed-loop system dynamics under the state feedback controller you designed in part (c). What is the new system matrix?
+\problempart [25 points] Repeat the above for the following system:
+\[ \frac{dx}{dt} = Ax + Bu \]
+where
+\[
+A = \begin{bmatrix}
+a_{11} & a_{12} \\
+a_{21} & a_{22}
+\end{bmatrix}, \quad B = \begin{bmatrix}    0 \\ b_1 \end{bmatrix}.
+\]
+
+\problem{2} [15 points] Solve Problem 9.8 in the textbook. 
+
+\problem{3} 
+\problempart [5 points] Sketch the pole-zero diagram of the following transfer function:
+\[
+G(s) = K \frac{(s+5)(s+1)}{(s+3)(s^2 + 4s + 8)}.
+\]
+Answer the following questions based on the pole-zero diagram:
+\problempart [5 points] Is the system stable? Why or why not?
+\problempart [10 points] Sketch an approximate magnitude Bode plot of the system. Label the slopes and the corner frequencies on the plot.
+\problempart [15 points] We want to obtain a system that attenuates the load disturbance at low frequencies. That is, we want a gain of less than 0 dB at frequencies lower than 1 rad/s. Sketch a desirable Bode plot for the loop gain $L(s) = G(s)C(s)$ where $C(s)$ is a controller that we can design. Label the corner frequencies on the plot.
+You are not asked to find the controller --- simply sketch a desirable Bode plot.
+\end{document}
